@@ -1,0 +1,15 @@
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 환경 변수·키 (실수로 올라가지 않도록)
+.env
+.env.*
+*.pem
+*.key
+
+# 로그·임시 파일
+*.log
+node_modules/

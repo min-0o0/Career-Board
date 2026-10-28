@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CAREER BOARD</title>
+<meta name="description" content="취업 준비 일정과 문서별 할 일을 한 화면에서 관리하는 개인용 보드">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="gate" id="gate" hidden>
+  <button class="icon-btn gate-theme" type="button" data-theme-btn aria-label="다크 모드로 전환" title="다크 모드로 전환">
+    <span class="ic-moon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 11.5A6.5 6.5 0 0 1 8.5 3.5a6.5 6.5 0 1 0 8 8z"/></svg></span>
+    <span class="ic-sun" hidden><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="3.5"/><path d="M10 2.5v1.8M10 15.7v1.8M2.5 10h1.8M15.7 10h1.8M4.7 4.7l1.3 1.3M14 14l1.3 1.3M4.7 15.3L6 14M14 6l1.3-1.3"/></svg></span>
+  </button>
+  <form class="gate-card" id="gateForm" autocomplete="off">
+    <div class="gate-brand">CAREER BOARD</div>
+    <h2 id="gateTitle">비밀번호를 입력하세요</h2>
+    <p class="note" id="gateNote"></p>
+    <div class="field"><label for="gPw">비밀번호</label><input id="gPw" type="password" autocomplete="current-password"></div>
+    <div class="field" id="gPw2W" hidden><label for="gPw2">비밀번호 확인</label><input id="gPw2" type="password" autocomplete="new-password"></div>
+    <div class="msg" id="gMsg" role="alert"></div>
+    <button class="btn primary wide" type="submit" id="gGo">들어가기</button>
+    <button class="link" type="button" id="gAlt">비밀번호를 잊었어요</button>
+    <div id="gReset" hidden>
+      <p class="note">이 브라우저에 저장된 비밀번호만 지우고 새로 정합니다. 일정과 할 일 데이터는 지워지지 않습니다.</p>
+      <div class="actions"><button class="btn" type="button" id="gResetNo">취소</button><button class="btn danger" type="button" id="gResetYes">잠금 지우기</button></div>
+    </div>
+  </form>
+</div>
+
+<div class="app" id="app" hidden>
+  <aside class="side" id="side" aria-label="메뉴">
+    <div class="brandrow"><div class="brandbox brandtxt"><div class="brand">CAREER BOARD</div></div><button class="icon-btn side-toggle" type="button" id="sideToggle" aria-expanded="true" aria-label="사이드바 접기" title="사이드바 접기"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2.5"/><path d="M8 4v12"/></svg></button></div>
+    <nav class="navgrp" aria-label="일정">
+      <div class="navlbl">일정</div>
+      <button class="nv" type="button" data-go="calendar"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2.5"/><path d="M3 8.5h14M7 3v3M13 3v3"/></svg><span class="lb">캘린더</span></button>
+      <button class="nv" type="button" data-go="upcoming"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4.5l3 1.5"/></svg><span class="lb">다가오는 일정</span><span class="badge" id="badgeUp">0</span></button>
+    </nav>
+    <nav class="navgrp" aria-label="할 일">
+      <div class="navlbl navrow"><span>할 일</span><button class="navedit" type="button" id="catEdit" aria-label="카테고리 편집" title="카테고리 편집"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16H4v-3z"/></svg></button></div>
+      <div class="doclist" id="docList"></div>
+    </nav>
+    <div class="side-foot">
+      <div class="tiles">
+        <div class="tile"><b id="sUp">0</b><span>다가오는 일정</span></div>
+        <div class="tile"><b id="sLeft">0</b><span>남은 할 일</span></div>
+      </div>
+      <div class="foot-btns">
+        <button class="btn sm" type="button" data-theme-btn aria-label="다크 모드로 전환" title="다크 모드로 전환">
+          <span class="ic-moon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 11.5A6.5 6.5 0 0 1 8.5 3.5a6.5 6.5 0 1 0 8 8z"/></svg></span>
+          <span class="ic-sun" hidden><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="3.5"/><path d="M10 2.5v1.8M10 15.7v1.8M2.5 10h1.8M15.7 10h1.8M4.7 4.7l1.3 1.3M14 14l1.3 1.3M4.7 15.3L6 14M14 6l1.3-1.3"/></svg></span>
+          <span class="tl">다크 모드</span>
+        </button>
+        <button class="btn sm" type="button" data-lock-btn aria-label="잠금 설정" title="잠금 설정">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="9" width="12" height="8" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg><span class="tl2">잠금</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="col">
+    <header class="mtop">
+      <div class="mtop-l"><button class="icon-btn" type="button" id="navBtn" aria-label="메뉴 열기" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M3.5 5.5h13M3.5 10h13M3.5 14.5h13"/></svg></button><div class="brand">CAREER BOARD</div></div>
+      <div class="mtop-btns">
+        <button class="icon-btn" type="button" data-theme-btn aria-label="다크 모드로 전환" title="다크 모드로 전환">
+          <span class="ic-moon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 11.5A6.5 6.5 0 0 1 8.5 3.5a6.5 6.5 0 1 0 8 8z"/></svg></span>
+          <span class="ic-sun" hidden><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="3.5"/><path d="M10 2.5v1.8M10 15.7v1.8M2.5 10h1.8M15.7 10h1.8M4.7 4.7l1.3 1.3M14 14l1.3 1.3M4.7 15.3L6 14M14 6l1.3-1.3"/></svg></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="main" id="main">
+      <section class="view" id="vCal" aria-labelledby="h-cal">
+        <div class="view-h">
+          <div class="vt"><h1 class="vtitle" id="h-cal">캘린더</h1><div class="vsub">나의 일정 모아보기</div></div>
+          <button class="btn primary only-d" type="button" id="calAdd">+ 일정 등록</button>
+        </div>
+        <div class="calbody">
+          <div class="calleft">
+            <div class="card calcard">
+          <div class="cal-ctl">
+            <button class="icon-btn" type="button" id="calPrev" aria-label="이전 달"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.5 4.5L7 10l5.5 5.5"/></svg></button>
+            <h2 class="cal-title" id="calTitle" role="button" tabindex="0" title="연도·월 이동" aria-haspopup="dialog"></h2>
+            <button class="icon-btn" type="button" id="calNext" aria-label="다음 달"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></button>
+            <button class="btn" type="button" id="calToday">오늘</button>
+          </div>
+              <div class="cal" id="calGrid"></div>
+              <div class="legend" id="calLegend"></div>
+            </div>
+          </div>
+          <div class="side-col">
+            <section class="card" id="dayCard" aria-labelledby="dayTitle">
+              <div class="card-h">
+                <div><div class="lbl">일정 확인</div><h3 id="dayTitle"></h3><div class="hol-tag" id="dayHol" hidden></div></div>
+              </div>
+              <div class="ev-list" id="dayList"></div>
+            </section>
+            <section class="card" id="monCard" hidden aria-labelledby="monTitle">
+              <div class="card-h">
+                <div><div class="lbl">날짜 미정</div><h3 id="monTitle"></h3></div>
+              </div>
+              <div class="ev-list" id="monList"></div>
+            </section>
+            <section class="card" id="upCard" aria-labelledby="upTitle">
+              <div class="card-h"><div><div class="lbl">앞으로</div><h3 id="upTitle">다가오는 일정</h3></div></div>
+              <div class="ev-list" id="upList"></div>
+              <button class="linkrow" type="button" id="tbdNote" hidden></button>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="vUp" hidden aria-labelledby="h-up">
+        <div class="view-h">
+          <div class="vt"><h1 class="vtitle" id="h-up">다가오는 일정</h1><div class="vsub">다가오는 일정과 아직 미정인 일정보기</div></div>
+          <button class="btn primary only-d" type="button" id="upAdd">+ 일정 등록</button>
+        </div>
+        <section class="card" aria-label="날짜가 정해진 일정"><div class="ev-list" id="upBig"></div></section>
+        <section class="card" aria-labelledby="tbdTitle">
+          <div class="card-h">
+            <div><div class="lbl">미정</div><h3 id="tbdTitle">날짜 미정</h3></div>
+          </div>
+          <div class="ev-list" id="tbdList"></div>
+        </section>
+      </section>
+
+      <section class="view" id="vTodo" hidden aria-labelledby="todoTitle">
+        <div class="view-h">
+          <div class="vt"><h1 class="vtitle" id="todoTitle"></h1></div>
+          <span class="hpct only-m" id="hpct" aria-hidden="true">0%</span>
+          <button class="btn primary only-d" type="button" id="toggleAdd">+ 항목 추가</button>
+        </div>
+        <nav class="tabs" id="tabs" role="tablist" aria-label="문서 구분" hidden></nav>
+        <div id="todoPane" class="pane">
+          <div class="card progress">
+            <div class="pct" id="pct">0%<small id="count">0 / 0 완료</small></div>
+            <div class="track" role="progressbar" aria-label="완료율" aria-valuemin="0" aria-valuemax="100" id="bar"><span id="barFill" style="width:0%"></span></div>
+            <div class="prio-sum" id="prioSum"></div>
+          </div>
+          <div class="tools">
+            <div class="filters">
+              <div class="fgrp"><span class="flbl">상태</span>
+                <div class="seg" role="group" aria-label="상태 필터" id="statusSeg">
+                  <button type="button" data-v="all" aria-pressed="true">전체</button>
+                  <button type="button" data-v="open" aria-pressed="false">남은 것</button>
+                  <button type="button" data-v="done" aria-pressed="false">완료</button>
+                </div>
+              </div>
+              <div class="fgrp"><span class="flbl">중요도</span>
+                <div class="seg" role="group" aria-label="우선순위 필터" id="prioSeg">
+                  <button type="button" data-v="0" aria-pressed="true">모두</button>
+                  <button type="button" data-v="1" aria-pressed="false">높음</button>
+                  <button type="button" data-v="2" aria-pressed="false">중간</button>
+                  <button type="button" data-v="3" aria-pressed="false">낮음</button>
+                </div>
+              </div>
+            </div>
+            <input class="search" id="q" type="search" placeholder="구분, 작업 내용, 메모 검색" aria-label="검색">
+          </div>
+          <div id="list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <button class="fab only-m" type="button" id="fab" aria-label="일정 추가" title="추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+</div>
+
+<div class="modal" id="evModal" hidden role="dialog" aria-modal="true" aria-labelledby="evModalTitle">
+  <form class="sheet" id="evForm">
+    <div class="sh full"><h3 id="evModalTitle">새 일정 등록</h3><button type="button" class="icon-btn sm" id="evX" aria-label="닫기"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>
+    <label class="chk full" for="evTbd"><input type="checkbox" id="evTbd"> 날짜 미정 (월만 정해 두기)</label>
+    <div class="dtwrap full">
+    <div class="dtmain" id="dtMain">
+    <div class="field" id="fDate"><span class="lbl" id="lbDate">날짜 (시작일)</span><input type="hidden" id="evDate"><button type="button" class="pick" id="pkDate" aria-labelledby="lbDate pkDate"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2.5"/><path d="M3 8.5h14M7 3v3M13 3v3"/></svg><span class="pv"></span></button></div>
+    <div class="field" id="fEnd"><span class="lbl" id="lbEnd">종료일 (여러 날일 때)</span><input type="hidden" id="evEnd"><button type="button" class="pick" id="pkEnd" aria-labelledby="lbEnd pkEnd"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2.5"/><path d="M3 8.5h14M7 3v3M13 3v3"/></svg><span class="pv"></span></button></div>
+    <div class="field full" id="fTime"><span class="lbl" id="lbTime">시간 (선택)</span><input type="hidden" id="evTime"><button type="button" class="pick" id="pkTime" aria-labelledby="lbTime pkTime"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4.2l2.8 1.8"/></svg><span class="pv"></span></button></div>
+    </div>
+    <div class="dtmonth off" id="dtMonthW" inert>
+    <div class="field" id="fMonth"><span class="lbl" id="lbMonth">예정 월</span><input type="hidden" id="evMonth"><button type="button" class="pick" id="pkMonth" aria-labelledby="lbMonth pkMonth"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2.5"/><path d="M3 8.5h14M7 3v3M13 3v3"/></svg><span class="pv"></span></button></div>
+    </div>
+    </div>
+    <div class="field full"><div class="lblrow"><span class="lbl">종류</span><button type="button" class="lg-edit" id="evKindEdit" aria-label="일정 종류 편집"><svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16H4v-3z"/></svg><span>편집</span></button></div><div class="kinds" id="evKinds" role="group" aria-label="일정 종류"></div></div>
+    <div class="field full"><label for="evTitle">제목</label><input id="evTitle" maxlength="80" placeholder="예: OO사 서류 마감"></div>
+    <div class="field full"><label for="evNote">메모 (선택)</label><textarea id="evNote" rows="2" maxlength="200" placeholder="장소, 준비물, 담당자 등"></textarea></div>
+    <div class="msg full" id="evMsg" role="alert"></div>
+    <div class="actions full"><button class="btn danger" type="button" id="evDel" hidden>삭제</button><button class="btn" type="button" id="evCancel">취소</button><button class="btn primary" type="submit" id="evSubmit">등록</button></div>
+  </form>
+</div>
+
+<div class="modal" id="kindModal" hidden role="dialog" aria-modal="true" aria-labelledby="kindTitle">
+  <div class="sheet" id="kindSheet">
+    <div class="sh full"><h3 id="kindTitle">일정 종류 편집</h3><button type="button" class="icon-btn sm" id="kindX" aria-label="닫기"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>
+    <div class="cat-list full" id="kindList"></div>
+    <form class="cat-add full" id="kindAdd" autocomplete="off"><input id="kindNew" maxlength="12" placeholder="새 종류 이름" aria-label="새 종류 이름"><button class="btn primary" type="submit">추가</button></form>
+    <p class="note full">변경 사항은 “완료”를 눌러야 적용됩니다. 종류를 삭제해도 일정은 지워지지 않고 회색 “기타”로 표시됩니다.</p>
+    <div class="actions full"><button class="btn" type="button" id="kindCancel">취소</button><button class="btn primary" type="button" id="kindDone">완료</button></div>
+  </div>
+</div>
+
+<div class="modal" id="pickModal" hidden role="dialog" aria-modal="true" aria-label="날짜·시간 선택">
+  <div class="pkcard" id="pkCard"></div>
+</div>
+
+<div class="modal" id="catModal" hidden role="dialog" aria-modal="true" aria-labelledby="catTitle">
+  <div class="sheet" id="catSheet">
+    <div class="sh full"><h3 id="catTitle">카테고리 편집</h3><button type="button" class="icon-btn sm" id="catX" aria-label="닫기"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>
+    <div class="cat-list full" id="catList"></div>
+    <form class="cat-add full" id="catAdd" autocomplete="off"><input id="catNew" maxlength="20" placeholder="새 카테고리 이름" aria-label="새 카테고리 이름"><button class="btn primary" type="submit">추가</button></form>
+    <p class="note full">변경 사항은 “완료”를 눌러야 적용됩니다. 숨긴 카테고리는 사이드바에서만 보이지 않고 항목은 남으며, 삭제하면 그 안의 항목도 함께 삭제됩니다.</p>
+    <div class="actions full"><button class="btn" type="button" id="catCancel">취소</button><button class="btn primary" type="button" id="catDone">완료</button></div>
+  </div>
+</div>
+
+<div class="modal" id="addModal" hidden role="dialog" aria-modal="true" aria-labelledby="addTitle">
+  <form class="sheet" id="addForm">
+    <div class="sh full"><h3 id="addTitle">새 할 일 추가</h3><button type="button" class="icon-btn sm" id="addX" aria-label="닫기"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>
+    <div class="field full"><label for="fArea">구분</label><input id="fArea" required maxlength="40" placeholder="예: 포트폴리오"></div>
+    <div class="field full"><span class="lbl" id="fPrioL">우선순위</span>
+      <input type="hidden" id="fPrio" value="2">
+      <div class="prio-opts" id="fPrioBtns" role="radiogroup" aria-labelledby="fPrioL">
+        <button type="button" role="radio" class="po p1" data-v="1" aria-checked="false">높음</button>
+        <button type="button" role="radio" class="po p2" data-v="2" aria-checked="true">중간</button>
+        <button type="button" role="radio" class="po p3" data-v="3" aria-checked="false">낮음</button>
+      </div></div>
+    <div class="field full"><label for="fProblem">작업 내용</label><textarea id="fProblem" required maxlength="400" placeholder="해야 할 일을 적어 주세요."></textarea></div>
+    <div class="field full"><label for="fFix">자세한 메모</label><textarea id="fFix" maxlength="400" placeholder="참고 사항, 진행 방법 등 (선택)"></textarea></div>
+    <div class="actions full">
+      <button class="btn" type="button" id="cancelAdd">취소</button>
+      <button class="btn primary" type="submit" id="addSave">저장</button>
+    </div>
+  </form>
+</div>
+
+<div class="modal" id="lockModal" hidden role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+  <form class="sheet" id="lockForm" autocomplete="off">
+    <h3 class="full" id="lockTitle">잠금 설정</h3>
+    <p class="note full" id="lockInfo"></p>
+    <div class="field full" id="lkCurW" hidden><label for="lkCur">현재 비밀번호</label><input id="lkCur" type="password" autocomplete="current-password"></div>
+    <div class="field full" id="lkNewW"><label for="lkNew" id="lkNewL">새 비밀번호 (6자 이상)</label><input id="lkNew" type="password" autocomplete="new-password"></div>
+    <div class="field full" id="lkNew2W"><label for="lkNew2">새 비밀번호 확인</label><input id="lkNew2" type="password" autocomplete="new-password"></div>
+    <div class="msg full" id="lkMsg" role="alert"></div>
+    <div class="actions full">
+      <button class="btn" type="button" id="lkClose">닫기</button>
+      <button class="btn" type="button" id="lkNow" hidden>지금 잠그기</button>
+      <button class="btn danger" type="button" id="lkOff" hidden>잠금 끄기</button>
+      <button class="btn primary" type="submit" id="lkSave">잠금 켜기</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="local-db.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
