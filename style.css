@@ -475,6 +475,19 @@ select option:checked { background: var(--accent-soft); color: var(--accent-ink)
 .when.sub { color: var(--muted); }
 .stamps { display: flex; flex-wrap: wrap; gap: 4px 18px; font-family: var(--font-num); font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--muted); }
 .stamps .done-at { color: var(--accent-ink); }
+.row.dropped { background: var(--surface-2); box-shadow: none; }
+.row.dropped .ttl { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--muted); }
+.row.dropped .area { color: var(--muted); }
+.row.dropped .check { background: transparent; border-color: var(--muted); color: var(--muted); }
+.row.dropped .check svg { opacity: 1; }
+.stamps .drop-at { color: var(--muted); }
+.drop-sec { margin-top: 8px; }
+.drop-toggle { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 4px 2px; border: 0; background: transparent; text-align: left; font-size: 14px; font-weight: 600; color: var(--muted); }
+.drop-toggle .chev { display: inline-block; width: 12px; transition: transform .15s ease; }
+.drop-toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.drop-toggle .n { font-family: var(--font-num); font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 500; }
+.drop-form { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--line-strong); border-radius: 12px; font-size: 14px; }
+.drop-reason { width: 100%; min-height: 64px; resize: vertical; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface-2); }
 .detail { border-top: 1px solid var(--line); padding: 14px 14px 16px 54px; display: grid; gap: 12px; }
 .detail dt { font-size: 12.5px; color: var(--muted); margin-bottom: 2px; font-weight: 500; }
 .detail dd { margin: 0; overflow-wrap: anywhere; }

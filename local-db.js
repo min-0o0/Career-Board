@@ -131,8 +131,9 @@
       { tab: "portfolio", area: "README",     problem: "실행 방법과 스크린샷이 없음",                 fix: "설치·실행 단계와 화면 캡처 추가",           priority: 1, done: false },
       { tab: "portfolio", area: "데모",       problem: "배포 링크가 없음",                            fix: "정적 호스팅으로 데모 공개",                priority: 2, done: false },
       { tab: "prep",      area: "면접 질문",  problem: "프로젝트 심화 질문 답변 준비 부족",           fix: "예상 질문 10개 작성 후 소리 내어 연습",     priority: 2, done: false },
-      { tab: "prep",      area: "코딩 테스트", problem: "그래프 유형 정확도가 낮음",                  fix: "BFS/DFS 문제 주 5개",                     priority: 2, done: false }
-    ].map(function (t, i) { t.note = ""; t.order = i; t.createdAt = now; return t; });
+      { tab: "prep",      area: "코딩 테스트", problem: "그래프 유형 정확도가 낮음",                  fix: "BFS/DFS 문제 주 5개",                     priority: 2, done: false },
+      { tab: "prep",      area: "자격증",     problem: "어학 점수 갱신",                              fix: "정기 시험 일정 확인 후 접수",              priority: 3, done: false, dropped: true, note: "[포기 사유] 지원 자격에 필요하지 않아 제외" }
+    ].map(function (t, i) { t.note = t.note || ""; t.order = i; t.createdAt = now; if (t.dropped) t.droppedAt = now; return t; });
 
     var ev = {}, td = {};
     events.forEach(function (e, i) { ev["sample-e" + i] = e; });

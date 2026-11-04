@@ -38,7 +38,7 @@
   function tabKeyOk(k) { return TABS.some(function (t) { return t.key === k; }); }
   function tabLabel(k) { var f = TABS.filter(function (t) { return t.key === k; })[0]; return f ? f.label : ""; }
   var items = [], events = [];
-  var ui = { view: "calendar", tab: "resume", status: "all", prio: 0, q: "", open: {}, confirm: null, adding: false, editId: null };
+  var ui = { view: "calendar", tab: "resume", status: "all", prio: 0, q: "", open: {}, confirm: null, drop: null, dropReason: "", dropOpen: false, adding: false, editId: null };
   var db = null, ready = false, loadError = "", started = false;
   var pendingRender = false;
 
@@ -120,9 +120,26 @@
   function ref(id) { return db.collection("todos").doc(id); }
 
   /* ---------- 할 일 ---------- */
+  var XICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>';
+  function isDropped(it) { return it.dropped === true; }
   function toggle(it) {
     var next = !it.done;
-    write(function () { return ref(it.id).update({ done: next, doneAt: next ? Date.now() : { __delete__: true } }); });
+    var upd = { done: next, doneAt: next ? Date.now() : { __delete__: true } };
+    if (isDropped(it) || it.droppedAt) { upd.dropped = false; upd.droppedAt = { __delete__: true }; }
+    write(function () { return ref(it.id).update(upd); });
+  }
+  function dropIt(it, reason) {
+    var r = String(reason || "").trim();
+    var ta = $("note-" + it.id);
+    var cur = ta ? ta.value : (it.note || "");
+    var upd = { dropped: true, droppedAt: Date.now(), done: false, doneAt: { __delete__: true } };
+    if (r) upd.note = (cur.replace(/\s+$/, "") ? cur.replace(/\s+$/, "") + "\n" : "") + "[포기 사유] " + r;
+    else if (cur !== (it.note || "")) upd.note = cur;
+    ui.drop = null; ui.dropReason = ""; ui.open[it.id] = false;
+    write(function () { return ref(it.id).update(upd); }, "포기함으로 옮겼습니다.");
+  }
+  function revive(it) {
+    write(function () { return ref(it.id).update({ dropped: false, droppedAt: { __delete__: true } }); }, "항목을 되살렸습니다.");
   }
   function saveNote(it, val) {
     if ((it.note || "") === val) return;
@@ -132,10 +149,8 @@
     ui.confirm = null;
     write(function () { return ref(it.id).delete(); }, "항목을 삭제했습니다.");
   }
-  function matches(it) {
+  function matchBase(it) {
     if (it.tab !== ui.tab) return false;
-    if (ui.status === "open" && it.done) return false;
-    if (ui.status === "done" && !it.done) return false;
     if (ui.prio && it.priority !== ui.prio) return false;
     if (ui.q) {
       var hay = [it.area, it.problem, it.fix, it.note].join(" ").toLowerCase();
@@ -143,10 +158,25 @@
     }
     return true;
   }
+  function matches(it) {
+    if (isDropped(it)) return false;
+    if (ui.status === "open" && it.done) return false;
+    if (ui.status === "done" && !it.done) return false;
+    return matchBase(it);
+  }
+  function matchDropped(it) { return isDropped(it) && matchBase(it); }
   function rowEl(it) {
     var open = !!ui.open[it.id];
-    var chk = h("button", { class: "check", type: "button", "aria-label": (it.done ? "완료 취소: " : "완료 처리: ") + it.area, "aria-pressed": it.done ? "true" : "false", onclick: function () { toggle(it); } });
-    chk.innerHTML = CHECK;
+    var dropped = isDropped(it);
+    var isDone = !!it.done && !dropped;
+    var chk;
+    if (dropped) {
+      chk = h("button", { class: "check", type: "button", "aria-label": "되살리기: " + it.area, title: "되살리기", onclick: function () { revive(it); } });
+      chk.innerHTML = XICON;
+    } else {
+      chk = h("button", { class: "check", type: "button", "aria-label": (it.done ? "완료 취소: " : "완료 처리: ") + it.area, "aria-pressed": it.done ? "true" : "false", onclick: function () { toggle(it); } });
+      chk.innerHTML = CHECK;
+    }
     var main = h("button", { class: "main-btn", type: "button", "aria-expanded": open ? "true" : "false", onclick: function () { ui.open[it.id] = !open; render(); } }, [
       h("span", { class: "area", text: it.area }),
       h("span", { class: "ttl", text: it.problem })
@@ -155,10 +185,11 @@
       h("span", { class: "pill p" + it.priority, text: PRIO[it.priority] }),
       h("div", { class: "dates" }, [
         it.createdAt ? h("span", { class: "when sub", text: "등록 " + fmt(it.createdAt) }) : null,
-        it.done ? h("span", { class: "when", text: "완료 " + (it.doneAt ? fmt(it.doneAt) : "날짜 없음") }) : null
+        dropped ? h("span", { class: "when sub", text: "포기 " + (it.droppedAt ? fmt(it.droppedAt) : "날짜 없음") }) : null,
+        isDone ? h("span", { class: "when", text: "완료 " + (it.doneAt ? fmt(it.doneAt) : "날짜 없음") }) : null
       ])
     ]);
-    var row = h("div", { class: "row" + (it.done ? " done" : "") }, [h("div", { class: "row-top" }, [chk, main, side])]);
+    var row = h("div", { class: "row" + (isDone ? " done" : "") + (dropped ? " dropped" : "") }, [h("div", { class: "row-top" }, [chk, main, side])]);
     if (open) {
       var ta = h("textarea", { id: "note-" + it.id, "aria-label": "메모", placeholder: "진행 상황, 참고 링크, 수정한 문구를 적어 두세요." });
       ta.value = it.note || "";
@@ -171,19 +202,40 @@
           h("button", { class: "btn sm", type: "button", onclick: function () { ui.confirm = null; render(); } }, ["취소"])
         ]);
       } else {
-        del = h("button", { class: "btn sm", type: "button", onclick: function () { ui.confirm = it.id; render(); } }, ["삭제"]);
+        del = h("button", { class: "btn sm", type: "button", onclick: function () { ui.confirm = it.id; ui.drop = null; render(); } }, ["삭제"]);
       }
       var edit = h("button", { class: "btn sm", type: "button", "aria-label": "항목 수정: " + it.area, onclick: function () { setAdding(true, it); } }, ["수정"]);
+      var dropForm = null, dropBtn = null;
+      if (dropped) {
+        dropBtn = h("button", { class: "btn sm", type: "button", "aria-label": "되살리기: " + it.area, onclick: function () { revive(it); } }, ["되살리기"]);
+      } else if (ui.drop === it.id) {
+        var rs = h("textarea", { class: "drop-reason", id: "drop-" + it.id, "aria-label": "포기 사유 (선택)", placeholder: "포기 사유를 적어 두세요. (선택)" });
+        rs.value = ui.dropReason || "";
+        rs.addEventListener("input", function () { ui.dropReason = rs.value; });
+        dropForm = h("div", { class: "drop-form" }, [
+          h("span", { text: "이 항목을 포기할까요? 포기함으로 옮겨지며 언제든 되살릴 수 있습니다." }),
+          rs,
+          h("div", { class: "detail-actions" }, [
+            h("button", { class: "btn sm", type: "button", onclick: function () { ui.drop = null; ui.dropReason = ""; render(); } }, ["취소"]),
+            h("button", { class: "btn sm primary", type: "button", onclick: function () { dropIt(it, rs.value); } }, ["포기"])
+          ])
+        ]);
+      } else {
+        dropBtn = h("button", { class: "btn sm", type: "button", "aria-label": "포기: " + it.area, onclick: function () { ui.drop = it.id; ui.dropReason = ""; ui.confirm = null; render(); } }, ["포기"]);
+      }
       row.appendChild(h("div", { class: "detail" }, [
         h("dl", { style: "margin:0;display:grid;gap:12px" }, [
           h("div", null, [h("dt", { text: "자세한 메모" }), h("dd", { text: it.fix || "아직 적지 않았습니다." })]),
           h("div", null, [h("dt", { text: "일정" }), h("dd", { class: "stamps" }, [
             h("span", { text: "등록 " + (it.createdAt ? fmtT(it.createdAt) : "기록 없음") }),
-            h("span", { class: it.done ? "done-at" : "", text: it.done ? "완료 " + (it.doneAt ? fmtT(it.doneAt) : "기록 없음") : "아직 완료하지 않음" })
+            dropped
+              ? h("span", { class: "drop-at", text: "포기 " + (it.droppedAt ? fmtT(it.droppedAt) : "기록 없음") })
+              : h("span", { class: isDone ? "done-at" : "", text: isDone ? "완료 " + (it.doneAt ? fmtT(it.doneAt) : "기록 없음") : "아직 완료하지 않음" })
           ])]),
           h("div", null, [h("dt", { text: "진행 메모" }), ta])
         ]),
-        h("div", { class: "detail-actions" }, [edit, del])
+        dropForm,
+        h("div", { class: "detail-actions" }, [edit, dropBtn, del])
       ]));
     }
     return row;
@@ -499,14 +551,14 @@
   function go(name) {
     setDrawer(false);
     applyHash(name);
-    ui.confirm = null; ui.confirmEv = null;
+    ui.confirm = null; ui.confirmEv = null; ui.drop = null;
     render();
     try { location.hash = name; } catch (e) {}
     try { $("main").scrollTop = 0; } catch (e) {}
   }
   window.addEventListener("hashchange", function () {
     var s = ""; try { s = (location.hash || "").slice(1); } catch (e) {}
-    if (applyHash(s)) { ui.confirm = null; ui.confirmEv = null; if (started) render(); }
+    if (applyHash(s)) { ui.confirm = null; ui.confirmEv = null; ui.drop = null; if (started) render(); }
   });
   qsa("[data-go]").forEach(function (b) { b.addEventListener("click", function () { go(b.getAttribute("data-go")); }); });
   function setDrawer(o) {
@@ -520,7 +572,7 @@
   function renderTabs() {
     var nav = $("tabs"); nav.textContent = "";
     TABS.filter(function (t) { return !t.hidden; }).forEach(function (t) {
-      var mine = items.filter(function (i) { return i.tab === t.key; });
+      var mine = items.filter(function (i) { return i.tab === t.key && !isDropped(i); });
       var d = mine.filter(function (i) { return i.done; }).length;
       nav.appendChild(h("button", {
         class: "tab", type: "button", role: "tab", "aria-selected": t.key === ui.tab ? "true" : "false",
@@ -548,13 +600,13 @@
     renderSideTabs();
     var up = upcomingCount();
     $("sUp").textContent = String(up); $("badgeUp").textContent = String(up);
-    $("sLeft").textContent = String(items.filter(function (i) { return !i.done && !tabHidden(i.tab); }).length);
+    $("sLeft").textContent = String(items.filter(function (i) { return !i.done && !isDropped(i) && !tabHidden(i.tab); }).length);
     var cur = ui.view === "todo" ? ui.tab : ui.view;
     qsa("[data-go]").forEach(function (b) {
       if (b.getAttribute("data-go") === cur) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
     TABS.forEach(function (t) {
-      var mine = items.filter(function (i) { return i.tab === t.key; });
+      var mine = items.filter(function (i) { return i.tab === t.key && !isDropped(i); });
       var d = mine.filter(function (i) { return i.done; }).length;
       if (!$("cnt-" + t.key)) return;
       $("cnt-" + t.key).textContent = d + "/" + mine.length;
@@ -571,14 +623,16 @@
   function renderTodoView() {
     $("todoTitle").textContent = tabLabel(ui.tab);
     renderTabs();
-    var tabItems = items.filter(function (i) { return i.tab === ui.tab; });
+    var tabAll = items.filter(function (i) { return i.tab === ui.tab; });
+    var tabItems = tabAll.filter(function (i) { return !isDropped(i); });
+    var droppedN = tabAll.length - tabItems.length;
     var total = tabItems.length, done = tabItems.filter(function (i) { return i.done; }).length;
     var pct = total ? Math.round(done / total * 100) : 0;
     $("barFill").style.width = pct + "%";
     $("bar").setAttribute("aria-valuenow", String(pct));
     $("pct").firstChild.nodeValue = pct + "%";
     $("hpct").textContent = pct + "%  ·  " + done + "/" + total;
-    $("count").textContent = done + " / " + total + " 완료";
+    $("count").textContent = done + " / " + total + " 완료" + (droppedN ? " · 포기 " + droppedN + " 제외" : "");
 
     var sum = $("prioSum"); sum.textContent = "";
     [1, 2, 3].forEach(function (p) {
@@ -590,7 +644,7 @@
     var list = $("list"); list.textContent = "";
     if (!ready) { list.appendChild(h("div", { class: "empty" }, [h("b", { text: "불러오는 중" }), "저장된 항목을 확인하고 있습니다."])); return; }
     if (loadError) { list.appendChild(h("div", { class: "empty" }, [h("b", { text: "저장소를 사용할 수 없습니다" }), loadError])); return; }
-    if (!total) { list.appendChild(h("div", { class: "empty" }, [h("b", { text: "아직 항목이 없습니다" }), "‘+ 항목 추가’로 이 탭에서 할 일을 적어 보세요."])); return; }
+    if (!tabAll.length) { list.appendChild(h("div", { class: "empty" }, [h("b", { text: "아직 항목이 없습니다" }), "‘+ 항목 추가’로 이 탭에서 할 일을 적어 보세요."])); return; }
 
     var wrap = h("div", { class: "pane" });
     var shown = 0;
@@ -604,7 +658,20 @@
         h("div", { class: "rows" }, group.map(rowEl))
       ]));
     });
-    if (!shown) wrap.appendChild(h("div", { class: "empty" }, [h("b", { text: "조건에 맞는 항목이 없습니다" }), "필터나 검색어를 바꿔 보세요."]));
+    var dl = ui.status === "all"
+      ? tabAll.filter(matchDropped).sort(function (a, b) { return (a.order || 0) - (b.order || 0); })
+      : [];
+    if (!shown && !dl.length) wrap.appendChild(h("div", { class: "empty" }, [h("b", { text: "조건에 맞는 항목이 없습니다" }), "필터나 검색어를 바꿔 보세요."]));
+    if (dl.length) {
+      var dOpen = !!ui.dropOpen;
+      var kids = [h("button", { class: "drop-toggle", type: "button", "aria-expanded": dOpen ? "true" : "false", onclick: function () { ui.dropOpen = !ui.dropOpen; render(); } }, [
+        h("span", { class: "chev", "aria-hidden": "true", text: "▸" }),
+        h("span", { text: "포기함" }),
+        h("span", { class: "n", text: dl.length + "개" })
+      ])];
+      if (dOpen) kids.push(h("div", { class: "rows" }, dl.map(rowEl)));
+      wrap.appendChild(h("section", { class: "section drop-sec" }, kids));
+    }
     list.appendChild(wrap);
   }
 
@@ -1081,7 +1148,7 @@
     write(function () {
       return db.collection("todos").add({
         tab: ui.tab, area: area, problem: problem, fix: $("fFix").value.trim(), priority: Number($("fPrio").value),
-        done: false, note: "", order: maxOrder + 1, createdAt: Date.now()
+        done: false, dropped: false, note: "", order: maxOrder + 1, createdAt: Date.now()
       });
     }, "항목을 추가했습니다.").then(function () { $("addForm").reset(); setPrio(2); setAdding(false); });
   });
