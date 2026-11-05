@@ -76,12 +76,13 @@ python3 -m http.server 8000   # http://localhost:8000
 ├── app.js           # 화면 로직 (캘린더, 할 일, 오늘 계획·진행, 잠금, 일정 종류/탭 편집)
 ├── local-db.js      # localStorage 기반 저장소 어댑터 + 샘플 데이터
 ├── docs/screenshots # README 이미지
-└── docs/db          # DB 설계 문서 (명세서 PPT, ERD 이미지·원본)
+└── docs/db          # DB 설계 문서 (명세서 PPT, ERD, 참고용 SQL)
 ```
 
 ## DB 설계 문서
 
 - 명세서: [docs/db/career-board-db-spec.pptx](docs/db/career-board-db-spec.pptx) — 컬렉션·컬럼·관계·역할, ERD, 수정 내역
+- 참고용 SQL: [schema.sql](docs/db/schema.sql) (SQLite 문법 DDL), [sample-data.sql](docs/db/sample-data.sql) (가상 샘플). 실제 앱은 SQL을 쓰지 않고 localStorage(JSON)에 저장하며, 같은 구조를 관계형으로 옮긴 설계 문서입니다.
 - ERD: ![ERD](docs/db/erd.png)
 - 컬렉션 구조를 바꾸면 명세서의 수정 내역 페이지에 한 줄 추가합니다.
 
