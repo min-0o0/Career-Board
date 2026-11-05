@@ -750,17 +750,34 @@
     var q = f.pauses[f.pauses.length - 1];
     if (now - q.from < SHORT_REST_MS) f.pauses.pop(); else q.to = now;
   }
+  /* 절반(△)으로 바꾼 계획은 같은 날 안이면 같은 집중 기록을 이어서 쓸 수 있다(집중 기록은 계획당 1개 유지). */
+  function tpResumable(p) {
+    return planState(p) === "done" && p.status === "partial" && tpCanStart(p) && p.focus.endedAt >= dayStartMs(todayStr());
+  }
   function tpStart(id) {
     var p = tpPlan(id); if (!p) return;
-    var st = planState(p), now = Date.now();
-    if (st === "run" || st === "done") return;
+    var st = planState(p), now = Date.now(), resume = false;
+    if (st === "run") return;
+    if (st === "done") {
+      if (p.status !== "partial") return;
+      if (!tpResumable(p)) { say("지난 날짜의 절반 계획은 이어서 집중할 수 없어요.", true); return; }
+      resume = true;
+    }
     if (st === "wait" && !tpCanStart(p)) { say("그날이 되면 집중을 시작할 수 있어요. (지난 날짜의 계획은 시작할 수 없어요)", true); return; }
     var others = tpPauseOthers(p.id, now), f;
     if (st === "paused") { f = tpFocusCopy(p.focus); tpCloseRest(f, now); }
+    else if (resume) {
+      /* 같은 집중 기록을 다시 열고, 종료~지금 사이를 쉰 구간으로 남긴다(1분 미만이면 집중에 포함). */
+      f = tpFocusCopy(p.focus);
+      var lq = f.pauses[f.pauses.length - 1];
+      if (lq && lq.to == null) lq.to = p.focus.endedAt;
+      if (now - p.focus.endedAt >= SHORT_REST_MS) f.pauses.push({ from: p.focus.endedAt, to: now });
+      f.endedAt = null;
+    }
     else f = { startedAt: now, endedAt: null, pauses: [] };
-    var msg = others.length ? "‘" + others[0].p.title + "’ 집중을 일시정지하고 ‘" + p.title + "’(으)로 바꿨어요." : (st === "paused" ? "이어서 집중합니다." : "집중을 시작했어요.");
+    var msg = others.length ? "‘" + others[0].p.title + "’ 집중을 일시정지하고 ‘" + p.title + "’(으)로 바꿨어요." : (resume ? "절반 계획에서 이어서 집중합니다." : st === "paused" ? "이어서 집중합니다." : "집중을 시작했어요.");
     ui.pSel = p.id; ui.pStale = "";
-    write(function () { return Promise.all(others.map(function (o) { return tpSaveFocus(o.p, o.f); }).concat([tpSaveFocus(p, f)])); }, msg);
+    write(function () { return Promise.all(others.map(function (o) { return tpSaveFocus(o.p, o.f); }).concat([tpSaveFocus(p, f, resume ? { doneAt: { __delete__: true } } : null)])); }, msg);
   }
   function tpPause(id) {
     var p = tpPlan(id); if (!p || !isRunning(p)) return;
@@ -1121,8 +1138,9 @@
       else { panel.appendChild(h("div", { class: "tp-mrow2" }, [btn(TPI.pause, "일시정지", "primary", function () { tpPause(p.id); })])); panel.appendChild(h("div", { class: "vsub tp-mhint", text: "끝내려면 먼저 일시정지를 눌러 주세요." })); }
     } else if (stt === "done") {
       panel.appendChild(h("div", { class: "tp-mtimer" }, [h("div", { class: "tp-big", text: durText(msToMin(focusMs(p, now))) }), h("small", { text: tmText(p.focus.startedAt) + "–" + tmText(p.focus.endedAt) + " 집중" })]));
-      panel.appendChild(h("div", { class: "vsub tp-mhint", text: "위의 상태 칩을 누르면 완료 ↔ 절반으로 바뀌어요. 절반은 달성도에 0.5로 계산돼요." }));
-      panel.appendChild(h("div", { class: "tp-mrow2" }, [btn(TPI.edit, "집중 시간 수정", "", function () { tpOpenSess(p.id); })]));
+      panel.appendChild(h("div", { class: "vsub tp-mhint", text: "위의 상태 칩을 누르면 완료 ↔ 절반으로 바뀌어요. 절반은 달성도에 0.5로 계산돼요." + (tpResumable(p) ? " 절반일 때는 이어서 집중할 수 있어요." : "") }));
+      var sessBtn = btn(TPI.edit, "집중 시간 수정", "", function () { tpOpenSess(p.id); });
+      panel.appendChild(h("div", { class: "tp-mrow2" }, tpResumable(p) ? [btn(TPI.play, "이어서 집중", "primary", function () { tpStart(p.id); }), sessBtn] : [sessBtn]));
     } else if (tpCanStart(p)) {
       panel.appendChild(h("div", { class: "tp-mrow2" }, [btn(TPI.play, "집중 시작", "primary", function () { tpStart(p.id); })]));
     } else if (ps === "fail") panel.appendChild(h("div", { class: "vsub", text: "집중 기록 없이 날짜가 지나 ‘실패’로 표시돼요." }));
@@ -1178,7 +1196,8 @@
       if (stt === "run") box.appendChild(h("div", { class: "vsub", text: "집중을 끝내려면 먼저 일시정지를 눌러 주세요." }));
     } else if (stt === "done") {
       box.appendChild(h("div", { class: "tp-timer" }, [h("div", { class: "tp-big", style: "font-size:24px" }, [durText(msToMin(focusMs(p, now))), h("small", { text: tmText(p.focus.startedAt) + "–" + tmText(p.focus.endedAt) + " 집중" })])]));
-      box.appendChild(h("div", { class: "vsub", text: "상태(완료/절반)를 눌러 바꿀 수 있어요. 절반은 달성도에 0.5로 계산돼요." }));
+      box.appendChild(h("div", { class: "vsub", text: "상태(완료/절반)를 눌러 바꿀 수 있어요. 절반은 달성도에 0.5로 계산돼요." + (tpResumable(p) ? " 절반일 때는 이어서 집중할 수 있어요." : "") }));
+      if (tpResumable(p)) box.appendChild(h("div", { class: "tp-acts" }, [btn(TPI.play, "이어서 집중", "primary", function () { tpStart(p.id); })]));
     } else if (tpCanStart(p)) {
       box.appendChild(h("div", { class: "tp-acts" }, [btn(TPI.play, "집중 시작", "primary", function () { tpStart(p.id); })]));
     } else if (ps === "fail") {
@@ -1288,6 +1307,7 @@
       else d.appendChild(ib(TPI.pause, "일시정지", "primary", function () { tpPause(sel.id); }));
     } else if (stt === "done") {
       d.appendChild(h("span", { class: "dk-t sm", text: durText(msToMin(focusMs(sel, now))) }));
+      if (tpResumable(sel)) d.appendChild(ib(TPI.play, "이어서 집중", "primary", function () { tpStart(sel.id); }));
     } else if (tpCanStart(sel)) {
       var sb = iconEl("button", TPI.play, { class: "btn primary dk-b", type: "button", onclick: function () { tpStart(sel.id); } }); sb.appendChild(document.createTextNode("집중 시작")); d.appendChild(sb);
     }
