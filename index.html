@@ -39,6 +39,7 @@
       <div class="navlbl">일정</div>
       <button class="nv" type="button" data-go="calendar"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2.5"/><path d="M3 8.5h14M7 3v3M13 3v3"/></svg><span class="lb">캘린더</span></button>
       <button class="nv" type="button" data-go="upcoming"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4.5l3 1.5"/></svg><span class="lb">다가오는 일정</span><span class="badge" id="badgeUp">0</span></button>
+      <button class="nv" type="button" data-go="plan"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="11" r="6"/><path d="M10 8v3.2l2 1.2M8 2.5h4"/></svg><span class="lb">오늘 계획 · 진행</span></button>
     </nav>
     <nav class="navgrp" aria-label="할 일">
       <div class="navlbl navrow"><span>할 일</span><button class="navedit" type="button" id="catEdit" aria-label="카테고리 편집" title="카테고리 편집"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16H4v-3z"/></svg></button></div>
@@ -164,11 +165,33 @@
           <div id="list"></div>
         </div>
       </section>
+
+      <section class="view tp-view" id="vPlan" hidden aria-labelledby="h-plan">
+        <div class="view-h">
+          <div class="vt"><h1 class="vtitle" id="h-plan">오늘 계획 · 진행</h1><div class="vsub">시간대별로 계획하고, 실제 집중한 시간을 기록해요</div></div>
+        </div>
+        <div class="tp-date" id="tpDate"></div>
+        <div class="tp-two">
+          <div class="l">
+            <div id="tpNotes" class="tp-notes"></div>
+            <section class="tp-gridwrap" aria-label="시간 그리드">
+              <div class="gh"><b id="tpRange" style="color:var(--fg)">06:00 – 24:00</b><span class="lgd"><span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>계획</span><span><i style="background:var(--accent)"></i>실제 집중</span><span><i style="background:var(--accent-soft);border:1.5px dashed var(--accent)"></i>일정에서 온 계획</span></span></div>
+              <div class="tp-scroll" id="tpScroll"><div class="tp-gridbox" id="tpGrid"></div></div>
+            </section>
+          </div>
+          <div class="r">
+            <section class="card tp-sum" id="tpSum" aria-label="전체 계획"></section>
+            <section class="card tp-card tp-detail" id="tpDetail" aria-label="선택한 계획"></section>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
   <div class="scrim" id="scrim" hidden></div>
   <button class="fab only-m" type="button" id="fab" aria-label="일정 추가" title="추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <div class="tp-msscrim" id="tpMScrim" hidden></div>
+  <div class="tp-dock" id="tpDock" hidden role="region" aria-label="지금 집중"></div>
 </div>
 
 <div class="modal" id="evModal" hidden role="dialog" aria-modal="true" aria-labelledby="evModalTitle">
@@ -202,6 +225,12 @@
     <div class="actions full"><button class="btn" type="button" id="kindCancel">취소</button><button class="btn primary" type="button" id="kindDone">완료</button></div>
   </div>
 </div>
+
+<div class="modal" id="tpAddModal" hidden role="dialog" aria-modal="true" aria-labelledby="tpAddTitle"><div class="sheet" id="tpAddSheet"></div></div>
+<div class="modal" id="tpLinkModal" hidden role="dialog" aria-modal="true" aria-label="할 일 연결"><div class="sheet" id="tpLinkSheet"></div></div>
+<div class="modal" id="tpSessModal" hidden role="dialog" aria-modal="true" aria-label="집중 시간 수정"><div class="sheet" id="tpSessSheet"></div></div>
+
+<div class="modal" id="tpTimeModal" hidden role="dialog" aria-modal="true" aria-labelledby="tpTimeTitle"><div class="sheet" id="tpTimeSheet"></div></div>
 
 <div class="modal" id="pickModal" hidden role="dialog" aria-modal="true" aria-label="날짜·시간 선택">
   <div class="pkcard" id="pkCard"></div>
