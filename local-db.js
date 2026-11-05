@@ -7,7 +7,7 @@
  * 지원하는 메서드: collection(name).add / onSnapshot, collection(name).doc(id).set / update / delete
  * update()에서 값이 { __delete__: true } 이면 해당 필드를 지웁니다.
  *
- * 처음 열면 가상의 샘플 일정·할 일이 들어갑니다. 날짜는 오늘 기준으로 계산하므로 항상 최근 데이터처럼 보입니다.
+ * 처음 열면 가상의 샘플 일정·할 일·오늘 계획이 들어갑니다. 날짜는 오늘 기준으로 계산하므로 항상 최근 데이터처럼 보입니다.
  * 실제 개인 데이터는 이 저장소에 없고, 사용자의 브라우저 안에만 저장됩니다.
  */
 (function () {
@@ -16,6 +16,7 @@
 
   var PREFIX = "cb.db.v1.";
   var SEEDED = PREFIX + "seeded";
+  var PLANS_SEEDED = PREFIX + "plans-seeded";   /* 계획(plans) 샘플은 따로 한 번만 넣는다(이미 샘플을 받은 브라우저에도 추가) */
   var listeners = {};
 
   function load(name) {
@@ -144,7 +145,35 @@
     } catch (e) {}
   }
 
+  /* 오늘 계획 · 진행 샘플: 오늘(집중을 마친 계획 2개 + 아직 안 한 계획 2개)과 어제(마친 계획 1개 + 못 한 계획 1개). 모두 가상 내용.
+     시각은 오늘 기준으로 계산하므로 언제 열어도 같은 모양입니다. 연결한 할 일은 위 샘플 할 일(sample-t…)을 가리킵니다. */
+  function seedPlans() {
+    try { if (localStorage.getItem(PLANS_SEEDED) === "1") return; } catch (e) { return; }
+    var now = Date.now();
+    function at(offsetDays, h, m) { var d = new Date(); d.setDate(d.getDate() + offsetDays); d.setHours(h, m, 0, 0); return d.getTime(); }
+    function plan(day, title, start, end, planMin, todoIds, tabs, focus, status, focusMin, restMin) {
+      var p = { date: iso(day), title: title, start: start, end: end, planMin: planMin, eventId: "", todoIds: todoIds, tabs: tabs, carriedFrom: "", focus: focus || null, status: status || "wait", createdAt: now, updatedAt: now };
+      if (focus && focus.endedAt != null) { p.doneAt = focus.endedAt; p.focusMin = focusMin; p.restMin = restMin; }
+      return p;
+    }
+    var plans = [
+      plan(0, "알고리즘 문제 풀이", "07:30", "08:30", 60, [], [], { startedAt: at(0, 7, 32), endedAt: at(0, 8, 25), pauses: [] }, "done", 53, 0),
+      plan(0, "이력서 경력 요약 고치기", "09:00", "10:00", 60, ["sample-t1"], ["resume"], { startedAt: at(0, 9, 5), endedAt: at(0, 9, 40), pauses: [] }, "partial", 35, 0),
+      plan(0, "프로젝트 A 역할 표 정리", "14:00", "15:30", 90, ["sample-t3"], ["career"]),
+      plan(0, "예상 면접 질문 작성", "16:00", "17:00", 60, ["sample-t7"], ["prep"]),
+      plan(-1, "코딩 테스트 복습", "20:00", "21:00", 60, [], [], { startedAt: at(-1, 20, 3), endedAt: at(-1, 20, 58), pauses: [{ from: at(-1, 20, 30), to: at(-1, 20, 36) }] }, "done", 49, 6),
+      plan(-1, "자기소개 다듬기", "21:00", "22:00", 60, [], [])
+    ];
+    var pl = {};
+    plans.forEach(function (p, i) { pl["sample-p" + i] = p; });
+    try {
+      save("plans", pl);
+      localStorage.setItem(PLANS_SEEDED, "1");
+    } catch (e) {}
+  }
+
   seed();
+  seedPlans();
 
   window.claude = {
     use: function (name) {
