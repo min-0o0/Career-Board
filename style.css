@@ -399,6 +399,15 @@ select option:checked { background: var(--accent-soft); color: var(--accent-ink)
 .kinds { display: flex; flex-wrap: wrap; gap: 8px; }
 .kindbtn { border: 0; font-size: 14px; padding: 8px 14px; min-height: 40px; }
 .kindbtn[aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: 1px; font-weight: 700; }
+/* 시간 겹침 경고 팝업: 화면 위쪽에 떠서 레이아웃을 밀지 않는다 */
+.tp-ovpop { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 30; width: min(560px, calc(100vw - 16px)); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 14px 12px 14px 16px; background: var(--high-soft); color: var(--high); border: 1.5px solid var(--high); border-radius: var(--r-lg); box-shadow: 0 12px 36px rgba(0, 0, 0, .28); }
+.tp-ovpop .ic { display: grid; padding-top: 1px; }
+.tp-ovpop .ic svg { width: 20px; height: 20px; }
+.tp-ovpop .tx b { display: block; font-size: 15px; line-height: 1.4; }
+.tp-ovpop .txt { margin-top: 2px; font-size: 13.5px; line-height: 1.55; overflow-wrap: anywhere; max-height: 30vh; overflow-y: auto; }
+.tp-ovpop .btns { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.tp-ovpop .btn { background: var(--surface); color: var(--high); border-color: var(--high); }
+.tp-ovpop .icon-btn.sm { background: transparent; color: var(--high); }
 .actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .msg { color: var(--high); font-size: 13.5px; min-height: 0; }
 .msg:empty { display: none; }
