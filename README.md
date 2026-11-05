@@ -8,7 +8,7 @@
 
 | 캘린더 | 오늘 계획 · 진행 |
 | :---: | :---: |
-| ![캘린더](docs/screenshots/calendar.png) | ![오늘 계획 · 진행](docs/screenshots/plan.png) |
+| <img src="docs/screenshots/calendar.png" alt="캘린더" width="440"> | <img src="docs/screenshots/plan.png" alt="오늘 계획 · 진행" width="440"> |
 
 > 스크린샷의 일정, 할 일, 계획은 모두 가상의 샘플 데이터입니다. 모든 화면은 [사용 방법](#사용-방법)에서 볼 수 있습니다.
 
@@ -38,7 +38,7 @@
 - 상태는 대기 · 집중 중 · 완료 · 절반 · 실패입니다. 완료 칩을 눌러 절반으로 바꾸면 달성도에 0.5로 계산하고(절반 계획은 같은 날 안이면 [이어서 집중]으로 같은 집중 기록을 다시 열 수 있고, 종료~재개 사이는 쉰 시간으로 남습니다), 실패는 날짜가 지난 미착수 계획에서 계산합니다.
 - 시간이 정해진 일정은 점선 계획으로 자동 생성됩니다(시간만 수정 가능). 시간표에서 빼면 다시 만들지 않습니다.
 - 계획에 문서별 할 일을 연결하거나 새 할 일을 만들어 연결할 수 있고, 체크하면 할 일 목록에도 완료로 반영됩니다.
-- 계획 종료는 다음 날 24:00까지 잡을 수 있고(자정을 넘는 계획) 통계는 시작한 날에만 반영합니다. 계획끼리, 또는 일정과 시간이 겹치면 경고합니다.
+- 계획 종료는 다음 날 24:00까지 잡을 수 있고(자정을 넘는 계획) 통계는 시작한 날에만 반영합니다. 계획끼리, 또는 일정과 시간이 겹치면 팝업으로 경고합니다.
 
 **화면**
 - 데스크톱은 사이드바 + 본문, 모바일은 상단 바 + 하단 탭 구성으로 화면 크기에 맞게 바뀝니다.
@@ -57,9 +57,13 @@
 
 ### 캘린더
 
-| 라이트 (데스크톱) | 다크 (데스크톱) | 모바일 | 모바일 (다크) |
-| :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/calendar.png" alt="캘린더"> | <img src="docs/screenshots/calendar-dark.png" alt="캘린더 다크 모드"> | <img src="docs/screenshots/mobile.png" alt="캘린더 모바일" width="180"> | <img src="docs/screenshots/mobile-dark.png" alt="캘린더 모바일 다크 모드" width="180"> |
+| 라이트 | 다크 |
+| :---: | :---: |
+| <img src="docs/screenshots/calendar.png" alt="캘린더" width="440"> | <img src="docs/screenshots/calendar-dark.png" alt="캘린더 다크 모드" width="440"> |
+
+| 모바일 | 모바일 (다크) |
+| :---: | :---: |
+| <img src="docs/screenshots/mobile.png" alt="캘린더 모바일" width="220"> | <img src="docs/screenshots/mobile-dark.png" alt="캘린더 모바일 다크 모드" width="220"> |
 
 - 일정 종류마다 색이 달라 한눈에 구분됩니다(서류 마감 · 면접 · SSAFY · 자격증 · 기타). 기간 일정은 막대로 이어 보여 줍니다.
 - 날짜를 누르면 그날 일정이 옆(모바일은 아래)에 나옵니다. 날짜 미정 일정은 달별로 따로 모입니다.
@@ -69,7 +73,7 @@
 
 | 라이트 | 다크 |
 | :---: | :---: |
-| <img src="docs/screenshots/todo.png" alt="문서별 할 일"> | <img src="docs/screenshots/todo-dark.png" alt="문서별 할 일 다크 모드"> |
+| <img src="docs/screenshots/todo.png" alt="문서별 할 일" width="440"> | <img src="docs/screenshots/todo-dark.png" alt="문서별 할 일 다크 모드" width="440"> |
 
 - 상단 카드에 탭별 진행률과 우선순위별 완료 수가 나옵니다. 상태·중요도로 거르고 검색할 수 있습니다.
 - 항목은 높음 · 중간 · 낮음 순으로 묶입니다. 포기한 항목은 아래 접이식 "포기함"으로 가고 진행률에서 빠집니다.
@@ -78,15 +82,20 @@
 
 | 라이트 | 다크 |
 | :---: | :---: |
-| <img src="docs/screenshots/plan.png" alt="오늘 계획 · 진행"> | <img src="docs/screenshots/plan-dark.png" alt="오늘 계획 · 진행 다크 모드"> |
+| <img src="docs/screenshots/plan.png" alt="오늘 계획 · 진행" width="440"> | <img src="docs/screenshots/plan-dark.png" alt="오늘 계획 · 진행 다크 모드" width="440"> |
 
-| 모바일 | 모바일 (다크) | 어제 (실패·절반 표시) |
-| :---: | :---: | :---: |
-| <img src="docs/screenshots/plan-mobile.png" alt="오늘 계획 · 진행 모바일" width="220"> | <img src="docs/screenshots/plan-mobile-dark.png" alt="오늘 계획 · 진행 모바일 다크 모드" width="220"> | <img src="docs/screenshots/plan-past.png" alt="어제의 계획 화면"> |
+| 시간 겹침 경고 (팝업) | 어제 (실패·절반 표시) |
+| :---: | :---: |
+| <img src="docs/screenshots/plan-overlap.png" alt="시간이 겹치면 화면 위쪽에 뜨는 경고 팝업" width="440"> | <img src="docs/screenshots/plan-past.png" alt="어제의 계획 화면" width="440"> |
+
+| 모바일 | 모바일 (다크) |
+| :---: | :---: |
+| <img src="docs/screenshots/plan-mobile.png" alt="오늘 계획 · 진행 모바일" width="220"> | <img src="docs/screenshots/plan-mobile-dark.png" alt="오늘 계획 · 진행 모바일 다크 모드" width="220"> |
 
 - 시간표에서 계획은 상태별로 모양이 다릅니다. 완료 ✓, 절반 △, 실패 ✕, 대기와 집중 중은 아이콘 없이 표시하고, 점선은 일정에서 온 계획입니다.
 - 계획 칸 오른쪽의 세로 막대가 실제 집중 구간입니다. 쉰 구간에서 끊어집니다.
-- 시간이 겹치는 계획(원본 일정 포함)은 경고 박스와 칸의 경고 아이콘으로 알려 줍니다. **시간 조정**으로 고치거나 **그대로 두기**를 고릅니다.
+- 시간이 겹치는 계획(원본 일정 포함)은 화면 위쪽에 뜨는 경고 팝업과 칸의 경고 아이콘으로 알려 줍니다. **시간 조정**으로 고치거나 **그대로 두기**를 고릅니다. 같은 겹침은 한 번만 띄웁니다.
+- 계획의 이름·시간 수정과 삭제는 계획을 더블클릭(모바일은 선택 시트의 **수정**)해서 여는 팝업에서 합니다. 삭제는 한 번 더 확인하고, 일정에서 온 계획은 삭제 대신 시간표에서 뺍니다.
 - 오른쪽 카드에서 오늘 전체 달성도(완료 1점, 절반 0.5점)와 선택한 계획의 타이머, 쉰 시간, 연결한 할 일을 봅니다.
 
 ## 실행 방법
