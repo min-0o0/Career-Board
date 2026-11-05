@@ -6,9 +6,10 @@
 
 프레임워크나 빌드 과정 없이 **HTML · CSS · 바닐라 JavaScript**만으로 만들었습니다.
 
-| 캘린더 | 오늘 계획 · 진행 |
-| :---: | :---: |
-| <img src="docs/screenshots/calendar.png" alt="캘린더" width="440"> | <img src="docs/screenshots/plan.png" alt="오늘 계획 · 진행" width="440"> |
+<p align="center">
+  <img src="docs/screenshots/plan.png" alt="오늘 계획 · 진행 화면" width="860">
+</p>
+<p align="center"><sub>오늘 계획 · 진행 (데스크톱)</sub></p>
 
 > 스크린샷의 일정, 할 일, 계획은 모두 가상의 샘플 데이터입니다. 모든 화면은 [사용 방법](#사용-방법)에서 볼 수 있습니다.
 
@@ -57,13 +58,17 @@
 
 ### 캘린더
 
-| 라이트 | 다크 |
-| :---: | :---: |
-| <img src="docs/screenshots/calendar.png" alt="캘린더" width="440"> | <img src="docs/screenshots/calendar-dark.png" alt="캘린더 다크 모드" width="440"> |
+<p align="center">
+  <img src="docs/screenshots/calendar.png" alt="캘린더" width="860">
+</p>
+<p align="center"><sub>라이트 모드</sub></p>
 
-| 모바일 | 모바일 (다크) |
-| :---: | :---: |
-| <img src="docs/screenshots/mobile.png" alt="캘린더 모바일" width="220"> | <img src="docs/screenshots/mobile-dark.png" alt="캘린더 모바일 다크 모드" width="220"> |
+<p align="center">
+  <img src="docs/screenshots/calendar-dark.png" alt="캘린더 다크 모드" height="300">
+  <img src="docs/screenshots/mobile.png" alt="캘린더 모바일" height="300">
+  <img src="docs/screenshots/mobile-dark.png" alt="캘린더 모바일 다크 모드" height="300">
+</p>
+<p align="center"><sub>다크 모드 · 모바일 · 모바일 다크</sub></p>
 
 - 일정 종류마다 색이 달라 한눈에 구분됩니다(서류 마감 · 면접 · SSAFY · 자격증 · 기타). 기간 일정은 막대로 이어 보여 줍니다.
 - 날짜를 누르면 그날 일정이 옆(모바일은 아래)에 나옵니다. 날짜 미정 일정은 달별로 따로 모입니다.
@@ -71,26 +76,38 @@
 
 ### 문서별 할 일
 
-| 라이트 | 다크 |
-| :---: | :---: |
-| <img src="docs/screenshots/todo.png" alt="문서별 할 일" width="440"> | <img src="docs/screenshots/todo-dark.png" alt="문서별 할 일 다크 모드" width="440"> |
+<p align="center">
+  <img src="docs/screenshots/todo.png" alt="문서별 할 일" width="860">
+</p>
+<p align="center"><sub>라이트 모드</sub></p>
+
+<p align="center">
+  <img src="docs/screenshots/todo-dark.png" alt="문서별 할 일 다크 모드" height="300">
+</p>
+<p align="center"><sub>다크 모드</sub></p>
 
 - 상단 카드에 탭별 진행률과 우선순위별 완료 수가 나옵니다. 상태·중요도로 거르고 검색할 수 있습니다.
 - 항목은 높음 · 중간 · 낮음 순으로 묶입니다. 포기한 항목은 아래 접이식 "포기함"으로 가고 진행률에서 빠집니다.
 
 ### 오늘 계획 · 진행
 
-| 라이트 | 다크 |
-| :---: | :---: |
-| <img src="docs/screenshots/plan.png" alt="오늘 계획 · 진행" width="440"> | <img src="docs/screenshots/plan-dark.png" alt="오늘 계획 · 진행 다크 모드" width="440"> |
+<p align="center">
+  <img src="docs/screenshots/plan.png" alt="오늘 계획 · 진행" width="860">
+</p>
+<p align="center"><sub>라이트 모드</sub></p>
 
-| 시간 겹침 경고 (팝업) | 어제 (실패·절반 표시) |
-| :---: | :---: |
-| <img src="docs/screenshots/plan-overlap.png" alt="시간이 겹치면 화면 위쪽에 뜨는 경고 팝업" width="440"> | <img src="docs/screenshots/plan-past.png" alt="어제의 계획 화면" width="440"> |
+<p align="center">
+  <img src="docs/screenshots/plan-overlap.png" alt="시간이 겹치면 화면 위쪽에 뜨는 경고 팝업" height="300">
+  <img src="docs/screenshots/plan-past.png" alt="어제의 계획 화면" height="300">
+</p>
+<p align="center"><sub>시간 겹침 경고 팝업 · 어제 (실패·절반 표시)</sub></p>
 
-| 모바일 | 모바일 (다크) |
-| :---: | :---: |
-| <img src="docs/screenshots/plan-mobile.png" alt="오늘 계획 · 진행 모바일" width="220"> | <img src="docs/screenshots/plan-mobile-dark.png" alt="오늘 계획 · 진행 모바일 다크 모드" width="220"> |
+<p align="center">
+  <img src="docs/screenshots/plan-dark.png" alt="오늘 계획 · 진행 다크 모드" height="300">
+  <img src="docs/screenshots/plan-mobile.png" alt="오늘 계획 · 진행 모바일" height="300">
+  <img src="docs/screenshots/plan-mobile-dark.png" alt="오늘 계획 · 진행 모바일 다크 모드" height="300">
+</p>
+<p align="center"><sub>다크 모드 · 모바일 · 모바일 다크</sub></p>
 
 - 시간표에서 계획은 상태별로 모양이 다릅니다. 완료 ✓, 절반 △, 실패 ✕, 대기와 집중 중은 아이콘 없이 표시하고, 점선은 일정에서 온 계획입니다.
 - 계획 칸 오른쪽의 세로 막대가 실제 집중 구간입니다. 쉰 구간에서 끊어집니다.
