@@ -869,12 +869,18 @@
   function tpStalePop(run, over) {
     tpStaleClose();
     var pop = h("div", { id: "tpStalePop", class: "tp-stale", role: "status", "aria-live": "polite" }, []);
-    pop.appendChild(h("div", { class: "tp-st-t" }, [h("b", { text: "계획 시간을 " + durText(over.min) + " 넘겨 집중 중이에요" }),
+    var ic = h("span", { class: "ic" }, []); ic.innerHTML = svgOf('<circle cx="10" cy="10" r="7"/><path d="M10 6.2V10l2.6 1.6"/>', 20);
+    pop.appendChild(ic);
+    pop.appendChild(h("div", { class: "tx" }, [h("b", { text: "계획 시간을 " + durText(over.min) + " 넘겨 집중 중이에요" }),
       h("div", { class: "txt", text: "‘" + run.title + "’ · 계획 " + durText(planLen(run)) + ". 더 이어서 해도 괜찮아요." })]));
+    pop.appendChild(tpCloseBtn(tpStaleClose));
     var b2 = h("button", { class: "btn sm", type: "button", text: "지금 종료", onclick: function () { tpStaleClose(); tpEnd(run.id); } });
     var b3 = h("button", { class: "btn sm", type: "button", text: "종료 시각 고치기", onclick: function () { tpStaleClose(); tpOpenSess(run.id); } });
-    var b1 = h("button", { class: "btn sm primary", type: "button", text: "닫기", onclick: tpStaleClose });
-    pop.appendChild(h("div", { class: "btns" }, [b2, b3, b1]));
+    pop.appendChild(h("div", { class: "btns" }, [b2, b3]));
+    pop.appendChild(h("div", { class: "bar", "aria-hidden": "true" }, [h("span", {}, [])]));
+    /* 마우스를 올리거나 키보드로 들어오면 자동으로 닫히지 않게 멈춘다. */
+    function hold() { if (staleTimer) { clearTimeout(staleTimer); staleTimer = 0; } pop.classList.add("hold"); }
+    pop.addEventListener("pointerenter", hold); pop.addEventListener("focusin", hold);
     document.body.appendChild(pop); stalePop = pop;
     staleTimer = setTimeout(tpStaleClose, 12000);
   }

@@ -737,10 +737,21 @@ button.tp-b { font: inherit; font-size: 12.5px; }
 .tp-evname { display: grid; gap: 4px; padding: 10px 12px; border: 1.5px dashed var(--accent); border-radius: 12px; background: var(--accent-soft); color: var(--accent-ink); }
 .tp-evname .a { font-size: 12px; font-weight: 600; }
 .tp-evname .pill { justify-self: start; }
-.tp-stale { position: fixed; z-index: 90; left: 50%; transform: translateX(-50%); top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px)); width: min(560px, calc(100vw - 24px)); display: grid; gap: 10px; padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line-strong); border-left: 5px solid var(--mid); box-shadow: 0 10px 34px rgba(0, 0, 0, .3); }
-.tp-stale b { font-size: 14.5px; }
-.tp-stale .txt { font-size: 13px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
-.tp-stale .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.tp-stale { position: fixed; z-index: 90; left: 50%; transform: translateX(-50%); top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px)); width: min(560px, calc(100vw - 24px)); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 16px; border-radius: var(--r-lg); background: color-mix(in srgb, var(--accent-soft) 38%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent), 0 14px 40px rgba(0, 0, 0, .28); overflow: hidden; animation: tpStaleIn .18s ease-out; }
+.tp-stale .ic { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); flex: none; }
+.tp-stale .tx { min-width: 0; padding-top: 1px; }
+.tp-stale .tx b { display: block; font-size: 15px; font-weight: 600; color: var(--fg); line-height: 1.4; }
+.tp-stale .txt { font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.5; overflow-wrap: anywhere; }
+.tp-stale .btns { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.tp-stale .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.tp-stale .bar > span { display: block; height: 100%; background: var(--accent); transform-origin: left center; animation: tpStaleBar 12s linear forwards; }
+.tp-stale.hold .bar { visibility: hidden; }
+.tp-stale .icon-btn.sm { background: var(--surface); }
+.tp-stale .icon-btn.sm:hover { background: var(--surface-2); }
+@keyframes tpStaleIn { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes tpStaleBar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@media (max-width: 520px) { .tp-stale .btns { grid-column: 1 / -1; } .tp-stale .btns .btn { flex: 1 1 auto; } }
+@media (prefers-reduced-motion: reduce) { .tp-stale { animation: none; } .tp-stale .bar { display: none; } }
 
 /* 완료·절반·실패 계획 칸: 아이콘과 은은한 채움으로 상태를 보여 주고, 선택/경고도 테두리 두께를 바꾸지 않아 크기가 변하지 않는다 */
 .tp-b { border-width: 1.5px; }
