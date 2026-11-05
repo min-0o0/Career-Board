@@ -1167,32 +1167,17 @@
     if (ps === "done" || ps === "partial") {
       pill = tpResultPill(p, ps);
     } else pill = tpPill(ps);
-    var right = [pill];
-    if (p.date >= todayStr()) {
-      var tr = h("button", { class: "icon-btn sm dng", type: "button", "aria-label": "계획 삭제", title: "계획 삭제", "aria-pressed": ui.pDel === p.id ? "true" : "false", onclick: function () { ui.pDel = ui.pDel === p.id ? "" : p.id; renderPlanView(); } });
-      tr.innerHTML = TPI.trash; right.push(tr);
-    }
     box.appendChild(h("button", { class: "grab", type: "button", "aria-label": "선택한 계획 닫기", onclick: tpCloseSheet }));
-    box.appendChild(h("div", { class: "card-h" }, [h("div", null, [h("div", { class: "lbl", text: "선택한 계획" }), h("h3", { text: p.title })]), h("div", { class: "tp-hr2" }, right)]));
-    var tline = [h("span", { class: "vsub", style: "font-family:var(--font-num);font-variant-numeric:tabular-nums", text: "계획 " + spanFull(p) + " · " + durText(planLen(p)) })];
+    box.appendChild(h("div", { class: "lbl", text: "선택한 계획" }));
+    box.appendChild(h("h3", { class: "tp-dtitle", text: p.title }));
+    /* 한 줄: 상태 칩(작게) + "계획 · 시간 · 길이". 칩이 줄을 못 채울 만큼 좁으면 시간이 아래로 내려간다. */
+    var tline = [pill, h("span", { class: "vsub tp-ptime", style: "font-family:var(--font-num);font-variant-numeric:tabular-nums", text: "계획 · " + spanFull(p) + " · " + durText(planLen(p)) })];
     var te = iconEl("button", TPI.edit, { class: "btn sm only-m", type: "button", onclick: function () { tpOpenTime(p.id); } }); te.appendChild(document.createTextNode("수정")); tline.push(te);
-    tline.push(h("span", { class: "vsub only-d", style: "font-size:12px", text: "계획을 더블클릭하면 고쳐요" }));
     box.appendChild(h("div", { class: "tp-tline" }, tline));
     if (p.date !== ui.pDate) box.appendChild(h("div", { class: "vsub", text: dayLabel(p.date) + "에서 이어진 계획이에요. 완료·집중 기록은 시작한 날에 계산돼요." }));
     else if (p.endMin > DAY_MIN) box.appendChild(h("div", { class: "vsub", text: "자정을 넘어 " + dayLabel(nextKey(p.date)) + "까지 이어져요. 다음 날에도 보여요." }));
     var ev = p.eventId ? events.filter(function (x) { return x.id === p.eventId; })[0] : null;
     if (ev) { var dd = tpEvDday(ev), ki = kindInfo(kindOf(ev)); box.appendChild(h("div", { class: "tp-pills" }, [h("span", { class: "pill " + kcls(kindOf(ev)), text: ki.label }), h("span", { class: "vsub", text: "일정에서 온 계획(점선)" + (dd ? " · " + dd : "") + " · 시간만 고칠 수 있어요" })])); }
-    if (ui.pDel === p.id) {
-      var fm = p.focus ? msToMin(focusMs(p, now)) : 0;
-      var dw = h("div", { class: "tp-warnbox", role: "alertdialog", "aria-label": "계획 삭제 확인" }, []);
-      dw.innerHTML = TPI.alert;
-      dw.appendChild(h("div", null, [h("b", { text: "정말 삭제할까요?" }), h("div", { class: "txt", text: p.focus
-        ? "‘" + p.title + "’의 집중 기록(" + durText(fm) + ")도 함께 사라져서 나중에 통계에 반영되지 않아요. 연결한 할 일은 그대로 남아요."
-        : "‘" + p.title + "’ 계획을 삭제해요. 연결한 할 일은 그대로 남아요." })]));
-      dw.appendChild(h("div", { class: "btns" }, [h("button", { class: "btn sm danger", type: "button", text: "삭제", onclick: function () { tpDelete(p.id); } }),
-        h("button", { class: "btn sm", type: "button", text: "취소", onclick: function () { ui.pDel = ""; renderPlanView(); } })]));
-      box.appendChild(dw);
-    }
     function btn(svg, label, cls, fn) { var b = iconEl("button", svg, { class: "btn" + (cls ? " " + cls : ""), type: "button", onclick: fn }); b.appendChild(document.createTextNode(label)); return b; }
     if (stt === "run" || stt === "paused") {
       box.appendChild(h("div", { class: "tp-timer" }, [h("div", { class: "tp-big", style: stt === "paused" ? "color:var(--muted)" : "" }, [h("span", { "data-tpt": p.id, text: hmsText(focusMs(p, now)) }), h("small", { text: tmText(p.focus.startedAt) + " 시작" })])]));
@@ -1213,6 +1198,25 @@
     if (stt === "done") box.appendChild(h("div", { class: "tp-acts" }, [btn(TPI.edit, "집중 시간 수정", "sm", function () { tpOpenSess(p.id); })]));
     if (stt === "done") { if (p.todoIds.length) box.appendChild(tpTodoList(p, false)); }
     else box.appendChild(tpTodoList(p, p.date >= todayStr()));
+    /* 삭제는 카드 맨 아래 따로 둔다(자주 쓰는 버튼과 떨어뜨려 실수로 누르지 않게). 누르면 같은 자리에서 확인창으로 바뀐다. */
+    if (p.date >= todayStr()) {
+      var dr = h("div", { class: "tp-delrow" }, []);
+      if (ui.pDel === p.id) {
+        var fm = p.focus ? msToMin(focusMs(p, now)) : 0;
+        var dw = h("div", { class: "tp-warnbox", role: "alertdialog", "aria-label": "계획 삭제 확인" }, []);
+        dw.innerHTML = TPI.alert;
+        dw.appendChild(h("div", null, [h("b", { text: "정말 삭제할까요?" }), h("div", { class: "txt", text: p.focus
+          ? "‘" + p.title + "’의 집중 기록(" + durText(fm) + ")도 함께 사라져서 나중에 통계에 반영되지 않아요. 연결한 할 일은 그대로 남아요."
+          : "‘" + p.title + "’ 계획을 삭제해요. 연결한 할 일은 그대로 남아요." })]));
+        dw.appendChild(h("div", { class: "btns" }, [h("button", { class: "btn sm danger", type: "button", text: "삭제", onclick: function () { tpDelete(p.id); } }),
+          h("button", { class: "btn sm", type: "button", text: "취소", onclick: function () { ui.pDel = ""; renderPlanView(); } })]));
+        dr.appendChild(dw);
+      } else {
+        var tr = iconEl("button", TPI.trash, { class: "btn sm tp-delbtn", type: "button", "aria-label": "계획 삭제", onclick: function () { ui.pDel = p.id; renderPlanView(); } });
+        tr.appendChild(document.createTextNode("계획 삭제")); dr.appendChild(tr);
+      }
+      box.appendChild(dr);
+    }
   }
 
   /* ---------- 팝업 4: 계획 이름·시간 수정 (0시~다음 날 24시, 자정을 넘는 계획도 가능) ---------- */

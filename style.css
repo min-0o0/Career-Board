@@ -681,7 +681,7 @@ button.tp-b { font: inherit; font-size: 12.5px; }
 .tp-two { display: flex; gap: 20px; align-items: flex-start; }
 .tp-two .l { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 .tp-two .r { width: 316px; flex: none; display: flex; flex-direction: column; gap: 16px; }
-.tp-card { display: grid; gap: 10px; }
+.tp-card { display: grid; gap: 12px; }
 .tp-card h3 { font-size: 16px; font-weight: 700; }
 .tp-card .lbl { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
 .tp-todos { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
@@ -865,7 +865,17 @@ body.tp-dragging.rs, body.tp-dragging.rs * { cursor: ns-resize !important; }
 .tp-hr2 { display: flex; align-items: center; gap: 6px; flex: none; }
 .tp-detail .card-h { flex-wrap: nowrap; }
 .tp-detail .card-h > div:first-child { min-width: 0; }
-.tp-detail .card-h h3 { overflow-wrap: anywhere; }
+.tp-detail .card-h { align-items: flex-start; }
+.tp-tline { justify-content: flex-start; gap: 8px; }
+.tp-ptime { white-space: nowrap; font-size: 12.5px; }
+.tp-tline .pill.tpst, .tp-tline button.pill.tp-pillbtn { width: 92px; min-width: 92px; height: 28px; min-height: 28px; padding: 0 10px; font-size: 12px; }
+.tp-tline button.pill.tp-pillbtn .rt { min-width: 4em; }
+.tp-tline button.pill.tp-pillbtn .sw { width: 14px; height: 14px; }
+.tp-tline button.pill.tp-pillbtn .sw svg { width: 14px; height: 14px; }
+.tp-delrow { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: grid; }
+.tp-delbtn { justify-self: start; color: var(--high); border-color: color-mix(in srgb, var(--high) 40%, var(--line)); background: transparent; }
+.tp-delbtn:hover { background: var(--high-soft); }
+.tp-dtitle { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; word-break: keep-all; }
 .tp-detail button, .tp-dock button, .tp-pickrow, .tp-b { touch-action: manipulation; }
 .tp-detail .icon-btn.sm.dng { color: var(--high); background: var(--high-soft); }
 .tp-detail .grab, .tp-detail .msx { display: none; }
