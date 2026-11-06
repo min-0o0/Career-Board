@@ -48,12 +48,14 @@ INSERT INTO plans (id, date, title, start_time, end_time, plan_min, focus_starte
 INSERT INTO plan_todos (plan_id, todo_id) VALUES
   ('sample-p1', 'sample-t1'),
   ('sample-p2', 'sample-t3'),
-  ('sample-p3', 'sample-t7');
+  ('sample-p3', 'sample-t7'),
+  ('sample-p5', 'sample-t1');
 
 INSERT INTO plan_tabs (plan_id, tab_id) VALUES
   ('sample-p1', 'resume'),
   ('sample-p2', 'career'),
-  ('sample-p3', 'prep');
+  ('sample-p3', 'prep'),
+  ('sample-p5', 'resume');
 
 INSERT INTO focus_pauses (plan_id, from_at, to_at) VALUES
   ('sample-p4', 1793791800000, 1793792160000);

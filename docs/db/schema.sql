@@ -97,10 +97,10 @@ CREATE INDEX idx_plans_date ON plans(date);
 -- 일정에서 자동 생성한 계획은 일정당 하루 1개
 CREATE UNIQUE INDEX uq_plans_event_day ON plans(event_id, date) WHERE event_id IS NOT NULL;
 
--- plans.todoIds[] : 한 할 일은 한 계획에만 연결 (todo_id UNIQUE)
+-- plans.todoIds[] : 한 할 일을 여러 계획에 연결할 수 있음 (같은 계획 안 중복은 PK로 막음)
 CREATE TABLE plan_todos (
   plan_id  TEXT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
-  todo_id  TEXT NOT NULL UNIQUE REFERENCES todos(id) ON DELETE CASCADE,
+  todo_id  TEXT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
   PRIMARY KEY (plan_id, todo_id)
 );
 
