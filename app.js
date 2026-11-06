@@ -278,9 +278,9 @@
     });
     return { n: n, done: score, doneN: nd, partialN: np, failN: nf, pct: n ? Math.round(score / n * 100) : 0, focusMin: msToMin(f), planMin: pl };
   }
-  /* 할 일 연결 후보: 끝나지 않았고 포기하지 않았고 다른 어떤 계획에도 연결되지 않은 할 일 */
-  function linkedIdSet() { var s = {}; plans.forEach(function (p) { p.todoIds.forEach(function (id) { s[id] = p.id; }); }); return s; }
-  function linkableTodos() { var used = linkedIdSet(); return items.filter(function (t) { return !t.done && !isDropped(t) && !used[t.id]; }); }
+  /* 할 일 연결 후보: 끝나지 않았고 포기하지 않은 할 일. 다른 계획에 이미 연결된 할 일도 다시 연결할 수 있다. */
+  function otherLinkCount(todoId, planId) { var n = 0; plans.forEach(function (q) { if (q.id !== planId && q.todoIds.indexOf(todoId) >= 0) n++; }); return n; }
+  function linkableTodos() { return items.filter(function (t) { return !t.done && !isDropped(t); }); }
   function linkedTodosOf(p) { return p.todoIds.map(function (id) { return items.filter(function (t) { return t.id === id; })[0]; }).filter(Boolean); }
   /* 시간 입력 보정: 15분 단위 */
   function snap15(m) { return Math.round(m / 15) * 15; }
@@ -1631,7 +1631,7 @@
       var isMine = !!mine[t.id], on = isMine || !!l.sel[t.id], rd = h("span", { class: "rd" }); rd.innerHTML = CHECK;
       var attrs = { type: "button", class: "tp-pickrow" + (on ? " sel" : ""), "aria-pressed": on ? "true" : "false", onclick: function () { if (isMine) return; if (l.sel[t.id]) delete l.sel[t.id]; else l.sel[t.id] = 1; tpRenderLink(); } };
       if (isMine) attrs.disabled = "disabled";
-      var row = h("button", attrs, [rd, h("span", null, [h("span", { class: "a", text: (t.area || tabLabel(t.tab)) + (isMine ? " · 이 계획에 연결됨" : "") }), h("span", { class: "tt", text: t.problem })]), h("span", { class: "pill p" + t.priority, text: PRIO[t.priority] })]);
+      var row = h("button", attrs, [rd, h("span", null, [h("span", { class: "a", text: (t.area || tabLabel(t.tab)) + (isMine ? " · 이 계획에 연결됨" : (otherLinkCount(t.id, p.id) ? " · 다른 계획 " + otherLinkCount(t.id, p.id) + "곳에 연결됨" : "")) }), h("span", { class: "tt", text: t.problem })]), h("span", { class: "pill p" + t.priority, text: PRIO[t.priority] })]);
       if (isMine) {
         var un = h("button", { type: "button", class: "btn sm tp-unlink", text: "해제", "aria-label": "연결 해제: " + t.problem, onclick: function () { tpUnlink(p.id, t.id); } });
         list.appendChild(h("div", { class: "tp-rowwrap" }, [row, un]));
@@ -1639,7 +1639,7 @@
     });
     s.appendChild(list);
     var n = Object.keys(l.sel).length;
-    s.appendChild(h("div", { class: "full vsub tpa-note", text: "아직 끝나지 않은 할 일만 보여요. 다른 계획에 연결된 할 일은 겹쳐 연결하지 않아요. 연결한 할 일을 체크하면 할 일 목록에도 완료로 반영돼요." }));
+    s.appendChild(h("div", { class: "full vsub tpa-note", text: "아직 끝나지 않은 할 일만 보여요. 다른 계획에 연결된 할 일도 다시 연결할 수 있어요. 연결한 할 일을 체크하면 할 일 목록에도 완료로 반영돼요." }));
     var ok = h("button", { class: "btn primary", type: "button", text: n ? "선택한 " + n + "개 연결" : "연결", onclick: function () { tpLinkSave(); } }); if (!n) ok.setAttribute("disabled", "disabled");
     var nb = iconEl("button", TPI.plus.replace('width="18" height="18"', 'width="16" height="16"'), { class: "btn", type: "button", onclick: function () { l.mode = "new"; l.msg = ""; l.cat = tpNewTab(); tpRenderLink(); if (!tpMobile()) setTimeout(function () { var i = $("tpNArea"); if (i) i.focus(); }, 30); } }); nb.appendChild(document.createTextNode("새 할 일"));
     s.appendChild(h("div", { class: "actions full" }, [h("button", { class: "btn", type: "button", text: "닫기", onclick: tpCloseLink }), nb, ok]));
