@@ -104,6 +104,207 @@
     });
   })();
 
+  /* ---------- 간단 서식 메모 (마크다운 방식): 표시 · 입력 도구 ----------
+     저장 형식은 지금과 같은 일반 글자입니다. 쓸 수 있는 서식:
+     **굵게** *기울임* ~~취소선~~ ==강조== `코드` [글자](주소) 주소 · - 목록 · 1. 번호 · - [ ] 체크 · > 인용 · # 제목 · --- 구분선
+     표시할 때는 글자를 HTML로 해석하지 않고 DOM을 직접 만들며, 링크는 http(s)만 허용합니다. */
+  function mdUrlLabel(u) { var s = u.replace(/^https?:\/\//i, "").replace(/\/$/, ""); return s.length > 42 ? s.slice(0, 40) + "…" : s; }
+  function mdAnchor(parent, url, label, noLink) {
+    if (!/^https?:\/\/[^\s<>"]+$/i.test(url)) { parent.appendChild(document.createTextNode(label)); return; }
+    if (noLink) { parent.appendChild(h("span", { class: "md-a", title: url, text: label })); return; }
+    var stop = function (e) { e.stopPropagation(); };
+    parent.appendChild(h("a", { class: "md-a", href: url, target: "_blank", rel: "noopener noreferrer", title: url, text: label, onclick: stop, onkeydown: stop }));
+  }
+  /* 글자 안의 서식(굵게·기울임·취소선·강조·코드·링크). noLink이면 링크를 누를 수 없는 밑줄 글자로만 보여 준다(버튼 안에 넣을 때). */
+  function mdInline(s, parent, noLink) {
+    var re = /`([^`\n]+)`|\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>"]+)|\*\*(.+?)\*\*|~~(.+?)~~|==(.+?)==|\*([^*\s](?:[^*\n]*[^*\s])?)\*/g;
+    var last = 0, m;
+    while ((m = re.exec(s))) {
+      if (m.index > last) parent.appendChild(document.createTextNode(s.slice(last, m.index)));
+      last = re.lastIndex;
+      if (m[1] !== undefined) parent.appendChild(h("code", { class: "md-code", text: m[1] }));
+      else if (m[3] !== undefined) mdAnchor(parent, m[3], m[2], noLink);
+      else if (m[4] !== undefined) {
+        var u = m[4], tr = /[.,;:!?)\]'"”’」』]+$/.exec(u);
+        if (tr) { u = u.slice(0, u.length - tr[0].length); last -= tr[0].length; re.lastIndex = last; }
+        mdAnchor(parent, u, mdUrlLabel(u), noLink);
+      } else {
+        var tag = m[5] !== undefined ? "strong" : m[6] !== undefined ? "del" : m[7] !== undefined ? "mark" : "em";
+        var inner = m[5] !== undefined ? m[5] : m[6] !== undefined ? m[6] : m[7] !== undefined ? m[7] : m[8];
+        var el = h(tag, { class: "md-" + tag }); mdInline(inner, el, noLink); parent.appendChild(el);
+      }
+    }
+    if (last < s.length) parent.appendChild(document.createTextNode(s.slice(last)));
+  }
+  function mdItem(indent, mk, text, done) {
+    var d = Math.min(3, Math.floor(indent.replace(/\t/g, "  ").length / 2));
+    var row = h("div", { class: "md-li" + (done ? " done" : ""), style: "padding-left:" + d * 18 + "px" }), c = h("span", { class: "md-lc" });
+    mdInline(text, c); row.appendChild(mk); row.appendChild(c); return row;
+  }
+  /* 여러 줄 글 전체를 보기 좋게 그린다. 줄바꿈은 그대로 살린다(예전에 적어 둔 일반 메모도 같은 모양으로 보임). */
+  function mdRender(src, cls) {
+    var root = h("div", { class: "md" + (cls ? " " + cls : "") }), cur = null, m;
+    String(src == null ? "" : src).replace(/\r\n?/g, "\n").split("\n").forEach(function (raw) {
+      var line = raw.replace(/\s+$/, "");
+      if (!line.trim()) { cur = null; return; }
+      if (/^\s*(?:-{3,}|\*{3,}|_{3,})$/.test(line)) { cur = null; root.appendChild(h("hr", { class: "md-hr" })); return; }
+      if ((m = /^(#{1,3})\s+(.+)$/.exec(line))) { cur = null; var hd = h("div", { class: "md-h md-h" + m[1].length }); mdInline(m[2], hd); root.appendChild(hd); return; }
+      if ((m = /^(\s*)[-*+] \[([ xX])\] (.*)$/.exec(line))) { cur = null; root.appendChild(mdItem(m[1], h("span", { class: "md-box" + (m[2] === " " ? "" : " on"), "aria-hidden": "true" }), m[3], m[2] !== " ")); return; }
+      if ((m = /^(\s*)[-*+] (.*)$/.exec(line))) { cur = null; root.appendChild(mdItem(m[1], h("span", { class: "md-mk", text: "•" }), m[2])); return; }
+      if ((m = /^(\s*)(\d{1,3})\. (.*)$/.exec(line))) { cur = null; root.appendChild(mdItem(m[1], h("span", { class: "md-mk num", text: m[2] + "." }), m[3])); return; }
+      if ((m = /^>\s?(.*)$/.exec(line))) {
+        if (!cur || cur.t !== "q") { var q = h("div", { class: "md-q" }); root.appendChild(q); cur = { t: "q", el: q, n: 0 }; }
+        if (cur.n++) cur.el.appendChild(h("br"));
+        mdInline(m[1], cur.el); return;
+      }
+      if (!cur || cur.t !== "p") { var p = h("div", { class: "md-p" }); root.appendChild(p); cur = { t: "p", el: p, n: 0 }; }
+      if (cur.n++) cur.el.appendChild(h("br"));
+      mdInline(line, cur.el);
+    });
+    return root;
+  }
+  var MD_BLOCK_HEAD = /^\s*(?:#{1,3}\s+|>\s?|[-*+] \[[ xX]\] |[-*+] |\d{1,3}\. )/;
+  function mdLines1(src) { return String(src == null ? "" : src).split(/\r?\n/).filter(function (l) { return l.trim(); }); }
+  /* 목록·표 같은 곳에서 한 줄로 보여 줄 때: 서식 기호를 뺀 첫 줄 */
+  function mdPlain(src) {
+    var ls = mdLines1(src); if (!ls.length) return "";
+    return ls[0].replace(MD_BLOCK_HEAD, "").replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1").replace(/(\*\*|~~|==|`)/g, "").replace(/(^|[^*])\*([^*\n]+)\*/g, "$1$2");
+  }
+  /* 할 일 제목 줄(버튼 안): 첫 줄만 서식을 살려 보여 주고, 나머지는 “+N줄”로 알린다. 전체 내용은 펼친 상세에서 본다. */
+  function mdTitle(src) {
+    var t = h("span", { class: "ttl" }), ls = mdLines1(src);
+    if (!ls.length) return t;
+    mdInline(ls[0].replace(MD_BLOCK_HEAD, ""), t, true);
+    if (ls.length > 1) t.appendChild(h("span", { class: "md-more", text: " +" + (ls.length - 1) + "줄" }));
+    return t;
+  }
+  function mdHasRich(s) { return /\n|\*\S|~~|==|`|\]\(|https?:\/\/|^\s*(?:[-*+] |\d{1,3}\. |>|#{1,3} )/.test(String(s == null ? "" : s)); }
+
+  /* 입력 도구: 글자 칸 위에 서식 버튼 줄 + 미리보기. 글자 칸의 값은 그대로 일반 글자로 저장된다. */
+  function mdSet(ta, s, e, text, a, b) {
+    ta.focus(); ta.setSelectionRange(s, e);
+    var ok = false;
+    try { ok = text === "" ? document.execCommand("delete") : document.execCommand("insertText", false, text); } catch (x) {}
+    if (!ok) { ta.setRangeText(text, s, e, "end"); ta.dispatchEvent(new Event("input", { bubbles: true })); }
+    ta.setSelectionRange(a, b);
+  }
+  function mdLineStart(v, pos) { return pos === 0 ? 0 : v.lastIndexOf("\n", pos - 1) + 1; }
+  function mdWrap(ta, L, R, ph) {
+    var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd, sel = v.slice(s, e);
+    if (s >= L.length && v.slice(s - L.length, s) === L && v.slice(e, e + R.length) === R) { mdSet(ta, s - L.length, e + R.length, sel, s - L.length, s - L.length + sel.length); return; }
+    if (sel.length >= L.length + R.length && sel.slice(0, L.length) === L && sel.slice(sel.length - R.length) === R) { var inner = sel.slice(L.length, sel.length - R.length); mdSet(ta, s, e, inner, s, s + inner.length); return; }
+    var body = sel || ph;
+    mdSet(ta, s, e, L + body + R, s + L.length, s + L.length + body.length);
+  }
+  function mdLink(ta) {
+    var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd, sel = v.slice(s, e), t = "링크 텍스트";
+    if (/^https?:\/\/\S+$/i.test(sel)) mdSet(ta, s, e, "[" + t + "](" + sel + ")", s + 1, s + 1 + t.length);
+    else if (sel) { var a = s + sel.length + 3; mdSet(ta, s, e, "[" + sel + "](https://)", a, a + 8); }
+    else mdSet(ta, s, e, "[" + t + "](https://)", s + 1, s + 1 + t.length);
+  }
+  var MD_MARK = { ul: /^\s*[-*+] (?!\[[ xX]\] )/, ol: /^\s*\d{1,3}\. /, task: /^\s*[-*+] \[[ xX]\] /, q: /^>\s?/, h: /^#{1,3} / };
+  function mdLines(ta, kind) {
+    var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd, ls = mdLineStart(v, s), le = v.indexOf("\n", e);
+    if (le < 0) le = v.length;
+    if (e > s && v.charAt(e - 1) === "\n") le = e - 1;
+    var lines = v.slice(ls, le).split("\n"), mk = MD_MARK[kind], n = 0;
+    var filled = lines.filter(function (l) { return l.trim(); });
+    var all = filled.length > 0 && filled.every(function (l) { return mk.test(l); });
+    var out = lines.map(function (l) {
+      if (!l.trim() && lines.length > 1) return l;
+      var base = l.replace(MD_BLOCK_HEAD, "");
+      if (all) return base;
+      n++;
+      return (kind === "ul" ? "- " : kind === "ol" ? n + ". " : kind === "task" ? "- [ ] " : kind === "q" ? "> " : "## ") + base;
+    }).join("\n");
+    mdSet(ta, ls, le, out, ls, ls + out.length);
+  }
+  function mdIc(inner) { return '<svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>'; }
+  function mdEditor(ta, opt) {
+    if (!ta || ta._md) return null;
+    var wrap = h("div", { class: "mdw" }), bar = h("div", { class: "mdtb", role: "toolbar", "aria-label": "메모 서식 도구" });
+    var prev = h("div", { class: "mdprev", hidden: "hidden" }), tools = [];
+    function tool(cls, label, title, fn, svg) {
+      var b = h("button", { type: "button", class: "mdb" + (cls ? " " + cls : ""), title: title, "aria-label": title, onmousedown: function (e) { e.preventDefault(); }, onclick: fn });
+      if (svg) b.innerHTML = mdIc(svg); else b.appendChild(h("span", { text: label }));
+      bar.appendChild(b); tools.push(b);
+    }
+    tool("", "B", "굵게 (Ctrl+B)", function () { mdWrap(ta, "**", "**", "굵게"); });
+    tool("i", "I", "기울임 (Ctrl+I)", function () { mdWrap(ta, "*", "*", "기울임"); });
+    tool("s", "S", "취소선", function () { mdWrap(ta, "~~", "~~", "취소선"); });
+    tool("hl", "강조", "형광펜 강조", function () { mdWrap(ta, "==", "==", "강조"); });
+    tool("cd", "</>", "코드", function () { mdWrap(ta, "`", "`", "코드"); });
+    tool("", "", "링크 (Ctrl+K)", function () { mdLink(ta); }, '<path d="M8.5 11.5a3 3 0 0 0 4.2 0l2.6-2.6a3 3 0 0 0-4.2-4.2l-1 1M11.5 8.5a3 3 0 0 0-4.2 0L4.7 11.1a3 3 0 0 0 4.2 4.2l1-1"/>');
+    bar.appendChild(h("span", { class: "mdsep", "aria-hidden": "true" }));
+    tool("", "H", "제목", function () { mdLines(ta, "h"); });
+    tool("", "", "글머리 목록", function () { mdLines(ta, "ul"); }, '<path d="M8 5.5h8M8 10h8M8 14.5h8M4 5.5h.01M4 10h.01M4 14.5h.01" stroke-width="2.4"/>');
+    tool("", "1.", "번호 목록", function () { mdLines(ta, "ol"); });
+    tool("", "", "체크 목록", function () { mdLines(ta, "task"); }, '<rect x="3" y="3.5" width="5.5" height="5.5" rx="1.3"/><path d="M4.3 6.3l1.2 1.2 1.8-2.2M11.5 6.3H17M11.5 13.7H17"/><rect x="3" y="11" width="5.5" height="5.5" rx="1.3"/>');
+    tool("", "", "인용", function () { mdLines(ta, "q"); }, '<path d="M5 4v12M9 7h7M9 10h7M9 13h5"/>');
+    bar.appendChild(h("span", { class: "mdsp" }));
+    var cn = h("span", { class: "mdcnt", "aria-hidden": "true" }); bar.appendChild(cn);
+    var mW = h("button", { type: "button", "aria-pressed": "true", text: "작성", onmousedown: function (e) { e.preventDefault(); }, onclick: function () { setMode("write"); } });
+    var mP = h("button", { type: "button", "aria-pressed": "false", text: "미리보기", onmousedown: function (e) { e.preventDefault(); }, onclick: function () { setMode("preview"); } });
+    if (!(opt && opt.noMode)) bar.appendChild(h("div", { class: "mdmode", role: "group", "aria-label": "작성·미리보기" }, [mW, mP]));
+    function count() { cn.textContent = ta.value.length + "/" + ta.maxLength; }
+    function setMode(mode) {
+      var pv = mode === "preview";
+      if (pv) prev.style.minHeight = Math.max(64, ta.offsetHeight) + "px";
+      ta._md.mode = mode; ta.hidden = pv; prev.hidden = !pv;
+      if (pv) { prev.textContent = ""; prev.appendChild(ta.value.trim() ? mdRender(ta.value) : h("div", { class: "md-empty", text: "미리 볼 내용이 없어요." })); }
+      tools.forEach(function (b) { b.disabled = pv; });
+      mW.setAttribute("aria-pressed", pv ? "false" : "true"); mP.setAttribute("aria-pressed", pv ? "true" : "false");
+      if (!pv && ta.id === "evNote") growNote();
+    }
+    if (ta.parentNode) ta.parentNode.insertBefore(wrap, ta);
+    wrap.appendChild(bar); wrap.appendChild(ta); wrap.appendChild(prev);
+    ta._md = { mode: "write", reset: function () { setMode("write"); count(); } };
+    ta.addEventListener("input", count); count();
+    /* 필수 칸이 미리보기 중 숨겨진 채 비어 있으면 브라우저가 저장을 막고 알리지도 못하므로, 그럴 땐 작성 화면으로 돌아온다. */
+    ta.addEventListener("invalid", function () { if (ta._md.mode === "preview") setMode("write"); });
+    ta.addEventListener("keydown", function (e) {
+      if (e.isComposing || e.keyCode === 229) return;   /* 한글 조합 중에는 건드리지 않는다 */
+      var k = String(e.key || "").toLowerCase(), mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && !e.altKey) {
+        if (k === "b") { e.preventDefault(); mdWrap(ta, "**", "**", "굵게"); return; }
+        if (k === "i") { e.preventDefault(); mdWrap(ta, "*", "*", "기울임"); return; }
+        if (k === "k") { e.preventDefault(); mdLink(ta); return; }
+      }
+      /* 목록·인용 줄에서 Enter: 다음 줄에도 같은 표시를 이어 붙이고, 빈 항목에서 한 번 더 누르면 목록을 끝낸다. */
+      if (e.key === "Enter" && !e.shiftKey && !mod && !e.altKey && ta.selectionStart === ta.selectionEnd) {
+        var v = ta.value, pos = ta.selectionStart, ls = mdLineStart(v, pos), m = /^(\s*)(- \[[ xX]\] |[-*+] |\d{1,3}\. |> )(.*)$/.exec(v.slice(ls, pos));
+        if (!m) return;
+        e.preventDefault();
+        if (!m[3].trim()) { mdSet(ta, ls, pos, "", ls, ls); return; }
+        var mk = m[2];
+        if (/^\d/.test(mk)) mk = (parseInt(mk, 10) + 1) + ". "; else if (/^[-*+] \[/.test(mk)) mk = "- [ ] ";
+        var ins = "\n" + m[1] + mk;
+        mdSet(ta, pos, pos, ins, pos + ins.length, pos + ins.length);
+      }
+    });
+    return wrap;
+  }
+  /* 진행 메모: 평소에는 서식이 적용된 글로 보이고, 눌러야 도구와 입력 칸이 나온다(노션처럼). 칸 밖을 누르면 저장되고 다시 글로 보인다. */
+  function mdNote(ta, empty) {
+    var wrap = mdEditor(ta, { noMode: true }), box = h("div", { class: "mdnote" }), editing = false;
+    var view = h("div", { class: "mdview", role: "button", tabindex: "0", title: "눌러서 수정" });
+    function paint() { view.textContent = ""; view.appendChild(ta.value.trim() ? mdRender(ta.value) : h("div", { class: "md-empty", text: empty })); }
+    function show(edit) {
+      editing = edit; wrap.hidden = !edit; view.hidden = edit;
+      if (edit) { ta.focus(); try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch (x) {} }
+      else paint();
+    }
+    view.addEventListener("click", function () { show(true); });
+    view.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(true); } });
+    box.addEventListener("focusout", function () { setTimeout(function () { if (editing && !box.contains(document.activeElement)) show(false); }, 0); });
+    ta.addEventListener("keydown", function (e) { if (e.key === "Escape") { e.preventDefault(); ta.blur(); } });
+    box.appendChild(view); box.appendChild(wrap);
+    show(false);
+    return box;
+  }
+  function mdInitEditors() { ["evNote", "fProblem", "fFix"].forEach(function (id) { mdEditor($(id)); }); }
+  function mdResetAll() { ["evNote", "fProblem", "fFix"].forEach(function (id) { var t = $(id); if (t && t._md) t._md.reset(); }); }
+
   /* ---------- 날짜 도우미 ---------- */
   function p2(n) { return String(n).padStart(2, "0"); }
   function fmt(ts) { if (!ts) return ""; var d = new Date(ts); return d.getFullYear() + "." + p2(d.getMonth() + 1) + "." + p2(d.getDate()); }
@@ -345,7 +546,7 @@
     }
     var main = h("button", { class: "main-btn", type: "button", "aria-expanded": open ? "true" : "false", onclick: function () { ui.open[it.id] = !open; render(); } }, [
       h("span", { class: "area", text: it.area }),
-      h("span", { class: "ttl", text: it.problem })
+      mdTitle(it.problem)
     ]);
     var side = h("div", { class: "side-info" }, [
       h("span", { class: "pill p" + it.priority, text: PRIO[it.priority] }),
@@ -357,7 +558,7 @@
     ]);
     var row = h("div", { class: "row" + (isDone ? " done" : "") + (dropped ? " dropped" : "") }, [h("div", { class: "row-top" }, [chk, main, side])]);
     if (open) {
-      var ta = h("textarea", { id: "note-" + it.id, "aria-label": "메모", placeholder: "진행 상황, 참고 링크, 수정한 문구를 적어 두세요." });
+      var ta = h("textarea", { id: "note-" + it.id, "aria-label": "메모", maxlength: "2000", placeholder: "진행 상황, 참고 링크, 수정한 문구를 적어 두세요." });
       ta.value = it.note || "";
       ta.addEventListener("blur", function () { saveNote(it, ta.value); if (pendingRender) { pendingRender = false; render(); } });
       var del;
@@ -391,14 +592,15 @@
       }
       row.appendChild(h("div", { class: "detail" }, [
         h("dl", { style: "margin:0;display:grid;gap:12px" }, [
-          h("div", null, [h("dt", { text: "자세한 메모" }), h("dd", { text: it.fix || "아직 적지 않았습니다." })]),
+          mdHasRich(it.problem) ? h("div", null, [h("dt", { text: "작업 내용" }), h("dd", null, [mdRender(it.problem)])]) : null,
+          h("div", null, [h("dt", { text: "자세한 메모" }), h("dd", null, [it.fix ? mdRender(it.fix) : "아직 적지 않았습니다."])]),
           h("div", null, [h("dt", { text: "일정" }), h("dd", { class: "stamps" }, [
             h("span", { text: "등록 " + (it.createdAt ? fmtT(it.createdAt) : "기록 없음") }),
             dropped
               ? h("span", { class: "drop-at", text: "포기 " + (it.droppedAt ? fmtT(it.droppedAt) : "기록 없음") })
               : h("span", { class: isDone ? "done-at" : "", text: isDone ? "완료 " + (it.doneAt ? fmtT(it.doneAt) : "기록 없음") : "아직 완료하지 않음" })
           ])]),
-          h("div", null, [h("dt", { text: "진행 메모" }), ta])
+          h("div", null, [h("dt", { text: "진행 메모" }), mdNote(ta, "눌러서 진행 메모를 적어 두세요. 서식도 쓸 수 있어요.")])
         ]),
         dropForm,
         h("div", { class: "detail-actions" }, [edit, dropBtn, del])
@@ -466,7 +668,7 @@
     var body = h("div", { class: "body" }, [
       h("div", null, [h("span", { class: "pill " + kcls(kindOf(e)), text: kindInfo(kindOf(e)).label }), " ", h("span", { class: "ttl2", text: e.title })]),
       second,
-      e.note ? h("div", { class: "nt", text: e.note }) : null
+      e.note ? mdRender(e.note, "nt") : null
     ]);
     return h("div", { class: "ev ev-open", role: "button", tabindex: "0", title: "눌러서 보기·수정",
       onclick: function () { openEv(null, e); },
@@ -654,7 +856,7 @@
     $("evTitle").value = ev ? ev.title : "";
     $("evNote").value = ev ? (ev.note || "") : "";
     ui.evKind = ev ? kindOf(ev) : (KINDLIST[0] ? KINDLIST[0].key : ""); renderKinds(); syncTbd(); syncPicks();
-    $("evModal").hidden = false; growNote(); if (!ev) $("evTitle").focus();
+    mdResetAll(); $("evModal").hidden = false; growNote(); if (!ev) $("evTitle").focus();
   }
   function closeEv() { $("evModal").hidden = true; }
   $("calAdd").addEventListener("click", function () { openEv(ui.sel); });
@@ -1084,7 +1286,7 @@
       var chk = h("button", { class: "check", type: "button", "aria-label": t.problem + (t.done ? " 완료됨" : " 완료로 표시"), "aria-pressed": t.done ? "true" : "false", onclick: function () { toggle(t); } });
       chk.innerHTML = CHECK;
       tl.appendChild(h("div", { class: "td" + (t.done ? " on" : "") }, [chk,
-        h("span", { class: "tt" }, [h("span", { class: "a", text: tabLabel(t.tab) + (t.done && t.doneAt ? " · " + tmText(t.doneAt) + " 완료" : "") }), t.problem]),
+        h("span", { class: "tt" }, [h("span", { class: "a", text: tabLabel(t.tab) + (t.done && t.doneAt ? " · " + tmText(t.doneAt) + " 완료" : "") }), mdPlain(t.problem)]),
         h("span", { class: "pill p" + t.priority, text: PRIO[t.priority] })]));
     });
     var thKids = [h("b", { text: "연결한 할 일" }), h("span", { text: n ? d + "/" + n + " 완료" : "0개" })];
@@ -1631,7 +1833,7 @@
       var isMine = !!mine[t.id], on = isMine || !!l.sel[t.id], rd = h("span", { class: "rd" }); rd.innerHTML = CHECK;
       var attrs = { type: "button", class: "tp-pickrow" + (on ? " sel" : ""), "aria-pressed": on ? "true" : "false", onclick: function () { if (isMine) return; if (l.sel[t.id]) delete l.sel[t.id]; else l.sel[t.id] = 1; tpRenderLink(); } };
       if (isMine) attrs.disabled = "disabled";
-      var row = h("button", attrs, [rd, h("span", null, [h("span", { class: "a", text: (t.area || tabLabel(t.tab)) + (isMine ? " · 이 계획에 연결됨" : (otherLinkCount(t.id, p.id) ? " · 다른 계획 " + otherLinkCount(t.id, p.id) + "곳에 연결됨" : "")) }), h("span", { class: "tt", text: t.problem })]), h("span", { class: "pill p" + t.priority, text: PRIO[t.priority] })]);
+      var row = h("button", attrs, [rd, h("span", null, [h("span", { class: "a", text: (t.area || tabLabel(t.tab)) + (isMine ? " · 이 계획에 연결됨" : (otherLinkCount(t.id, p.id) ? " · 다른 계획 " + otherLinkCount(t.id, p.id) + "곳에 연결됨" : "")) }), h("span", { class: "tt", text: mdPlain(t.problem) })]), h("span", { class: "pill p" + t.priority, text: PRIO[t.priority] })]);
       if (isMine) {
         var un = h("button", { type: "button", class: "btn sm tp-unlink", text: "해제", "aria-label": "연결 해제: " + t.problem, onclick: function () { tpUnlink(p.id, t.id); } });
         list.appendChild(h("div", { class: "tp-rowwrap" }, [row, un]));
@@ -1994,6 +2196,7 @@
         $("addTitle").textContent = tabLabel(ui.tab) + " · 새 할 일 추가";
         $("addSave").textContent = "저장";
       }
+      mdResetAll();
       $("fArea").focus();
     }
   }
@@ -2396,8 +2599,9 @@
   $("pkTime").addEventListener("click", function () { openPick("time", "evTime"); });
   $("pkMonth").addEventListener("click", function () { openPick("month", "evMonth"); });
   $("pickModal").addEventListener("click", function (e) { if (e.target === $("pickModal")) closePick(); });
-  function growNote() { var n = $("evNote"); n.style.height = "auto"; n.style.height = Math.min(n.scrollHeight + 2, 160) + "px"; n.style.overflowY = n.scrollHeight > 160 ? "auto" : "hidden"; }
+  function growNote() { var n = $("evNote"); n.style.height = "auto"; n.style.height = Math.min(n.scrollHeight + 2, 400) + "px"; n.style.overflowY = n.scrollHeight > 400 ? "auto" : "hidden"; }
   $("evNote").addEventListener("input", growNote);
+  mdInitEditors();
   $("fab").addEventListener("click", function () { if (ui.view === "todo") setAdding(true); else openEv(ui.sel); });
   (function () {
     var last = new WeakMap();

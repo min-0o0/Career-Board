@@ -972,3 +972,75 @@ body.tp-dragging.rs, body.tp-dragging.rs * { cursor: ns-resize !important; }
   .main.fit-plan::-webkit-scrollbar, #vPlan *::-webkit-scrollbar, .tp-detail::-webkit-scrollbar, #tpAddModal *::-webkit-scrollbar, #tpLinkModal *::-webkit-scrollbar, #tpSessModal *::-webkit-scrollbar,
   #tpAddModal::-webkit-scrollbar, #tpLinkModal::-webkit-scrollbar, #tpSessModal::-webkit-scrollbar { display: none; width: 0; height: 0; }
 }
+
+/* ===== 간단 서식 메모(마크다운 방식): 표시 · 입력 도구 ===== */
+.md { line-height: 1.55; overflow-wrap: anywhere; white-space: normal; }
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md-p, .md-q { margin: 0 0 4px; }
+.md-h { font-weight: 700; margin: 6px 0 2px; }
+.md-h1 { font-size: 1.18em; } .md-h2 { font-size: 1.08em; } .md-h3 { font-size: 1em; }
+.md-q { border-left: 3px solid var(--line-strong); padding: 1px 0 1px 10px; color: var(--muted); }
+.md-li { display: flex; gap: 6px; align-items: baseline; margin: 0 0 3px; }
+.md-mk { flex: none; width: 1.1em; text-align: center; color: var(--muted); }
+.md-mk.num { width: 1.7em; text-align: right; font-variant-numeric: tabular-nums; }
+.md-lc { min-width: 0; }
+.md-box { flex: none; width: 15px; height: 15px; border: 1.5px solid var(--line-strong); border-radius: 4px; align-self: center; position: relative; background: var(--surface); }
+.md-box.on { background: var(--accent); border-color: var(--accent); }
+.md-box.on::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid var(--on-accent); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.md-li.done .md-lc { color: var(--muted); text-decoration: line-through; }
+.md-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; }
+.md-mark { background: color-mix(in srgb, var(--half) 40%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
+.md-del { opacity: .7; }
+.md-a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: color-mix(in srgb, var(--accent-ink) 45%, transparent); }
+a.md-a:hover { text-decoration-color: currentColor; }
+.md-hr { border: 0; border-top: 1px solid var(--line); margin: 8px 0; }
+.md-more { font-size: .85em; color: var(--muted); font-family: var(--font-num); white-space: nowrap; }
+.md-empty { color: var(--muted); font-size: 13.5px; }
+.ev .nt.md { white-space: normal; }
+.mdw { display: flex; flex-direction: column; min-width: 0; }
+.mdtb { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; padding: 4px 6px; border: 1.5px solid var(--line-strong); border-bottom: 0; border-radius: 12px 12px 0 0; background: var(--surface-2); }
+.mdb { min-width: 32px; height: 32px; padding: 0 6px; border: 0; border-radius: 8px; background: transparent; color: var(--fg); font-size: 13.5px; font-weight: 700; display: inline-grid; place-items: center; }
+.mdb:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent-ink); }
+.mdb:disabled { opacity: .35; cursor: default; }
+.mdb.i { font-style: italic; font-family: Georgia, serif; }
+.mdb.s span { text-decoration: line-through; }
+.mdb.hl span { background: color-mix(in srgb, var(--half) 55%, transparent); padding: 0 4px; border-radius: 3px; font-size: 12.5px; }
+.mdb.cd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+.mdsep { width: 1px; height: 18px; background: var(--line-strong); margin: 0 4px; opacity: .6; }
+.mdsp { flex: 1; }
+.mdcnt { font-family: var(--font-num); font-size: 11.5px; color: var(--muted); padding: 0 6px; font-variant-numeric: tabular-nums; }
+.mdmode { display: inline-flex; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 2px; }
+.mdmode button { border: 0; background: transparent; border-radius: 7px; height: 26px; padding: 0 9px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.mdmode button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+.mdw textarea { border-radius: 0 0 12px 12px !important; }
+.mdprev { padding: 10px 12px; border: 1.5px solid var(--line-strong); border-radius: 0 0 12px 12px; background: var(--surface-2); max-height: 260px; overflow-y: auto; font-size: 14px; }
+@media (max-width: 899px) { .mdb { min-width: 38px; height: 38px; } .mdmode button { height: 32px; } }
+.mdtb { gap: 2px; padding: 3px 4px; border: 1.5px solid var(--line-strong); border-bottom: 0; border-radius: 10px 10px 0 0; background: var(--surface); }
+.mdb { min-width: 30px; height: 30px; padding: 0 5px; border-radius: 6px; color: var(--muted); font-weight: 600; font-size: 13px; }
+.mdb:hover:not(:disabled) { background: var(--surface-2); color: var(--fg); }
+.mdb svg { width: 16px; height: 16px; }
+.mdb.hl span { font-size: 12px; padding: 0 3px; }
+.mdsep { height: 16px; margin: 0 4px; }
+.mdmode { background: var(--surface-2); border: 0; border-radius: 7px; padding: 2px; }
+.mdmode button { height: 24px; padding: 0 10px; font-size: 12px; border-radius: 5px; }
+.mdmode button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, .14); }
+.mdcnt { font-size: 11px; padding: 0 8px; }
+.mdw textarea { border-radius: 0 0 10px 10px !important; }
+.mdprev { border: 1.5px solid var(--line-strong); border-radius: 0 0 10px 10px; background: var(--surface); max-height: 460px; }
+.detail .mdtb, .detail .mdprev { border-width: 1px; }
+@media (max-width: 899px) { .mdb { min-width: 36px; height: 36px; } .mdmode button { height: 30px; } }
+.mdview { padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; min-height: 48px; cursor: text; background: var(--surface); font-size: 14.5px; }
+.mdview:hover { background: var(--surface-2); }
+.mdview:focus-visible { outline: 0; border-color: var(--accent); }
+.mdview .md-empty { color: var(--muted); }
+.mdb, .mdview, .mdw textarea { -webkit-tap-highlight-color: transparent; }
+@media (max-width: 899px) {
+  .mdtb { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .mdtb::-webkit-scrollbar { display: none; }
+  .mdb { flex: none; min-width: 32px; height: 32px; font-size: 13px; }
+  .mdb svg { width: 15px; height: 15px; }
+  .mdmode, .mdcnt { flex: none; }
+  .mdmode button { height: 26px; font-size: 12px; }
+  .mdprev, .mdview { font-size: 13.5px; }
+}
