@@ -1533,6 +1533,70 @@
   }
 
   /* 이 날(오늘·앞으로)의 시간이 정해진 일정은 기본으로 계획이 되어 타임테이블에 나온다. 사용자가 ‘제외’한 일정은 다시 만들지 않는다. */
+  /* 집중 중인 계획은 어느 화면에서든 위쪽에 계속 보여 준다. 새로고침해도 저장된 집중 기록으로 다시 나타난다. */
+  function renderLive() {
+    var bar = $("liveBar"), rows = $("lvRows"); if (!bar || !rows) return;
+    var list = plLoaded ? livePlans(plans).slice() : [];
+    if (list.length && ui.view === "plan") { var sp = tpSelected(dayPieces(ui.pDate).map(function (x) { return x.full; }), Date.now()); if (sp) list = list.filter(function (p) { return p.id !== sp.id; }); }
+    rows.textContent = "";
+    if (!list.length) { bar.hidden = true; return; }
+    bar.hidden = false; bar.classList.toggle("min", lvMin); lvClamp();
+    var now = Date.now();
+    list.sort(function (a, b) { return (isRunning(b) ? 1 : 0) - (isRunning(a) ? 1 : 0) || a.focus.startedAt - b.focus.startedAt; });
+    list.forEach(function (p) {
+      var run = isRunning(p);
+      function lb(svg, label, cls, fn) { var b = iconEl("button", svg, { class: "btn sm" + (cls ? " " + cls : ""), type: "button", "aria-label": label + ": " + p.title, onclick: fn }); b.appendChild(document.createTextNode(label)); return b; }
+      var info = h("button", { class: "lv-i", type: "button", title: "계획 화면에서 보기", onclick: function () { ui.pDate = p.date; ui.pSel = p.id; ui.pSheet = false; go("plan"); } }, [h("small", { text: run ? "지금 집중 중" : "일시정지" }), h("b", { text: p.title })]);
+      var acts = run ? [lb(TPI.pause, "일시정지", "primary", function () { tpPause(p.id); })]
+        : [lb(TPI.play, "이어서", "primary", function () { tpStart(p.id); }), lb(TPI.stop, "종료", "", function () { tpEnd(p.id); })];
+      rows.appendChild(h("div", { class: "lv-row" + (run ? " run" : "") }, [h("span", { class: "lv-dot", "aria-hidden": "true" }), info, h("span", { class: "lv-t", "data-tpt": p.id, text: hmsText(focusMs(p, now)) })].concat(acts)));
+    });
+    var m0 = list[0], r0 = isRunning(m0), sum = $("lvSum"), tgl = $("lvTg");
+    sum.textContent = "";
+    var pb = iconEl("button", r0 ? TPI.pause : TPI.play, { class: "icon-btn", type: "button", "aria-label": (r0 ? "일시정지: " : "이어서 집중: ") + m0.title, onclick: function () { if (r0) tpPause(m0.id); else tpStart(m0.id); } });
+    [h("span", { class: "lv-st" + (r0 ? " run" : "") }), h("b", { class: "lv-sn", text: m0.title + (list.length > 1 ? " 외 " + (list.length - 1) : "") }), h("span", { class: "lv-t", "data-tpt": m0.id, style: r0 ? "" : "color:var(--muted)", text: hmsText(focusMs(m0, now)) }), pb].forEach(function (n) { sum.appendChild(n); });
+    if (tgl) { tgl.setAttribute("aria-expanded", lvMin ? "false" : "true"); tgl.setAttribute("aria-label", lvMin ? "펼치기" : "한 줄로 접기"); }
+  }
+
+  /* 집중 표시 위치: 윗줄을 끌어서(또는 방향키로) 옮기고, 이 브라우저에 기억한다. 두 번 누르면 원래 자리로. */
+  var lvMin = (function () { var s = lsGet("cb.live.min"); return s === null ? window.innerWidth < 900 : s === "1"; })();   /* 저장된 선택이 없으면 모바일은 한 줄로 시작 */
+  var LVK = "cb.live.pos";
+  function lvLoad() { try { var s = JSON.parse(lsGet(LVK) || "null"); if (s && isFinite(s.x) && isFinite(s.y)) return { x: s.x, y: s.y }; } catch (e) {} return null; }
+  var lvPos = lvLoad();
+  function lvApply(x, y) {
+    var bar = $("liveBar"), w = bar.offsetWidth || 340, hh = bar.offsetHeight || 60;
+    x = Math.max(4, Math.min(window.innerWidth - w - 4, x)); y = Math.max(4, Math.min(window.innerHeight - hh - 4, y));
+    bar.style.left = x + "px"; bar.style.top = y + "px"; bar.style.right = "auto"; bar.style.bottom = "auto";
+    return { x: x, y: y };
+  }
+  function lvClamp() { if (lvPos) lvPos = lvApply(lvPos.x, lvPos.y); }
+  (function () {
+    var grip = $("lvGrip"), bar = $("liveBar"), g = null;
+    if (!grip || !bar) return;
+    function save() { if (lvPos) lsSet(LVK, JSON.stringify(lvPos)); }
+    var tg = $("lvTg");
+    if (tg) tg.addEventListener("click", function () {
+      lvMin = !lvMin; lsSet("cb.live.min", lvMin ? "1" : "0"); bar.classList.toggle("min", lvMin);
+      tg.setAttribute("aria-expanded", lvMin ? "false" : "true"); tg.setAttribute("aria-label", lvMin ? "펼치기" : "한 줄로 접기"); lvClamp();
+    });
+    grip.addEventListener("pointerdown", function (e) {
+      if (e.button || (e.target.closest && e.target.closest("button"))) return;
+      var r = bar.getBoundingClientRect(); g = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+      try { grip.setPointerCapture(e.pointerId); } catch (x) {}
+      bar.classList.add("drag"); e.preventDefault();
+    });
+    grip.addEventListener("pointermove", function (e) { if (g) lvPos = lvApply(e.clientX - g.dx, e.clientY - g.dy); });
+    function end() { if (!g) return; g = null; bar.classList.remove("drag"); save(); }
+    grip.addEventListener("pointerup", end); grip.addEventListener("pointercancel", end);
+    ($("lvH") || grip).addEventListener("keydown", function (e) {
+      var d = { ArrowLeft: [-24, 0], ArrowRight: [24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] }[e.key];
+      if (!d) return;
+      e.preventDefault(); var r = bar.getBoundingClientRect(); lvPos = lvApply(r.left + d[0], r.top + d[1]); save();
+    });
+    grip.addEventListener("dblclick", function (e) { if (e.target.closest && e.target.closest("button")) return; lvPos = null; lsDel(LVK); bar.style.left = bar.style.top = bar.style.right = bar.style.bottom = ""; });
+    window.addEventListener("resize", lvClamp);
+  })();
+
   var autoBusy = {};
   function tpAutoEvents() {
     if (!db || !plLoaded || !evLoaded || ui.pDate < todayStr()) return;
@@ -1564,13 +1628,14 @@
     tpGrid(pieces, ov, now, isToday, sel ? sel.id : null);
     tpDetail(sel, now);
     tpDock(sel, now);
+    renderLive();
     tpScrollToNow(false);
   }
   /* 1초마다 집중 타이머 글자만 바꾸고, 30초마다 화면 전체를 다시 그려 현재 시각선과 집중 막대를 갱신 */
   setInterval(function () {
-    if (!ready || ui.view !== "plan") return;
+    if (!ready) return;
     TP.tick++;
-    if (TP.tick % 30 === 0) { renderPlanView(); return; }
+    if (ui.view === "plan" && TP.tick % 30 === 0) { renderPlanView(); return; }
     var now = Date.now();
     qsa("[data-tpt]").forEach(function (el) {
       var p = plans.filter(function (x) { return x.id === el.getAttribute("data-tpt"); })[0];
@@ -2153,7 +2218,7 @@
   }
 
   function render() {
-    renderChrome();
+    renderChrome(); renderLive();
     if (ui.view === "calendar") renderCalView();
     else if (ui.view === "upcoming") renderUpView();
     else if (ui.view === "plan") renderPlanView();
@@ -2161,7 +2226,7 @@
   }
   function renderSafe() {
     var a = document.activeElement;
-    if (a && a.tagName === "TEXTAREA" && $("list").contains(a)) { pendingRender = true; renderChrome(); return; }
+    if (a && a.tagName === "TEXTAREA" && $("list").contains(a)) { pendingRender = true; renderChrome(); renderLive(); return; }
     render();
   }
 
