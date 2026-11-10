@@ -1044,3 +1044,21 @@ a.md-a:hover { text-decoration-color: currentColor; }
   .mdmode button { height: 26px; font-size: 12px; }
   .mdprev, .mdview { font-size: 13.5px; }
 }
+
+/* ===== 시간 선택: 직접 입력 + 시·분 굴림 칸 ===== */
+.pkcard { max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
+.pk-ap { text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); min-height: 20px; }
+.pk-f { flex-wrap: wrap; }
+.pkcard { max-width: 380px; }
+.pk-time2 { display: grid; gap: 10px; }
+input.pk-in { width: 100%; height: 60px; padding: 0; text-align: center; font-family: var(--font-num); font-size: 36px !important; font-weight: 700; letter-spacing: .04em; font-variant-numeric: tabular-nums; color: var(--fg); background: var(--surface-2); border: 1.5px solid var(--line-strong); border-radius: 14px; }
+input.pk-in:focus { outline: 0; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent); }
+.pk-wl { display: grid; grid-template-columns: 1fr 24px 1fr; text-align: center; font-size: 12px; font-weight: 600; color: var(--muted); }
+.pk-wheels { position: relative; display: grid; grid-template-columns: 1fr 24px 1fr; align-items: center; }
+.pk-band { position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); border-radius: 12px; background: var(--accent-soft); border: 1.5px solid var(--accent); pointer-events: none; }
+.pk-wheel { position: relative; z-index: 1; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; outline: 0; touch-action: pan-y; -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); }
+.pk-wheel::-webkit-scrollbar { display: none; }
+.pk-wheel:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent); border-radius: 12px; }
+.pk-r { text-align: center; font-family: var(--font-num); font-size: 21px; color: var(--muted); scroll-snap-align: center; cursor: pointer; font-variant-numeric: tabular-nums; user-select: none; -webkit-user-select: none; }
+.pk-r.sel { color: var(--accent-ink); font-weight: 700; font-size: 26px; }
+.pk-colon2 { position: relative; z-index: 1; text-align: center; font-size: 28px; font-weight: 700; color: var(--muted); }

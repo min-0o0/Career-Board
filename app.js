@@ -2564,21 +2564,90 @@
       c.appendChild(mg);
       c.appendChild(h("div", { class: "pk-f" }, [h("span", { class: "sp" }), pkBtn("btn", "닫기", closePick)]));
     } else {
-      c.appendChild(h("div", { class: "pk-t", text: "시간 선택" }));
-      c.appendChild(h("div", { class: "pk-sub", text: "시" }));
-      var hg = h("div", { class: "pk-g" });
-      for (var hh = 0; hh < 24; hh++) (function (hh) { hg.appendChild(pkBtn("pk-c" + (pk.hh === hh ? " sel" : ""), p2(hh), function () { pk.hh = hh; renderPick(); })); })(hh);
-      c.appendChild(hg);
-      c.appendChild(h("div", { class: "pk-sub", text: "분" }));
-      var mgm = h("div", { class: "pk-g" });
-      for (var mm = 0; mm < 60; mm += pk.step) (function (mm) { mgm.appendChild(pkBtn("pk-c" + (pk.mi === mm ? " sel" : ""), p2(mm), function () { pk.mi = mm; renderPick(); })); })(mm);
-      c.appendChild(mgm);
-      c.appendChild(h("div", { class: "pk-f" }, [
-        pk.required ? null : pkBtn("btn", pk.clearLabel || "시간 없음", function () { setPickValue(""); }), pk.allow24 ? pkBtn("btn", "24:00", function () { setPickValue("24:00"); }) : null, h("span", { class: "sp" }),
-        pkBtn("btn", "취소", closePick), pkBtn("btn primary", "선택 " + p2(pk.hh) + ":" + p2(pk.mi), function () { setPickValue(p2(pk.hh) + ":" + p2(pk.mi)); })
-      ]));
+      renderTimePick(c);
     }
   }
+  /* 시간 선택: 위쪽 칸에 시간을 직접 입력(예: 0930)하거나, 아래 시·분 두 칸을 굴리거나 눌러서 1분 단위로 고른다. */
+  function renderTimePick(c) {
+    var ROW = 44, HT = ROW * 5, PAD = (HT - ROW) / 2;
+    var ti = h("input", { class: "pk-in", type: "text", inputmode: "numeric", autocomplete: "off", maxlength: "5", placeholder: "00:00", "aria-label": "시간 직접 입력 (예: 0930)" });
+    var ap = h("div", { class: "pk-ap", "aria-live": "polite" }), cols = {}, ok = null;
+    function hm() { return p2(pk.hh) + ":" + p2(pk.mi); }
+    function paint() {
+      ["hh", "mi"].forEach(function (k) {
+        cols[k].items.forEach(function (b, i) { var on = i === pk[k]; b.className = "pk-r" + (on ? " sel" : ""); b.setAttribute("aria-selected", on ? "true" : "false"); });
+      });
+      ap.textContent = fmtPickTime(hm());
+      if (ok) ok.textContent = "선택 " + hm();
+    }
+    function sync(keepInput) { if (!keepInput) ti.value = hm(); paint(); }
+    function place(k) { cols[k].el.scrollTop = pk[k] * ROW; }
+    function placeAll() { if (!pk || !cols.hh.el.isConnected) return; place("hh"); place("mi"); }
+    function done() { if (pk) setPickValue(hm()); }
+    function move(d) { var t = ((pk.hh * 60 + pk.mi + d) % 1440 + 1440) % 1440; pk.hh = Math.floor(t / 60); pk.mi = t % 60; placeAll(); sync(); }
+    function mkCol(k, n, label) {
+      var el = h("div", { class: "pk-wheel", role: "listbox", tabindex: "0", "aria-label": label }), inner = h("div", { class: "pk-wp" }), items = [];
+      el.style.height = HT + "px"; inner.style.padding = PAD + "px 0";
+      for (var i = 0; i < n; i++) (function (i) {
+        var b = h("div", { class: "pk-r", role: "option", text: p2(i), onclick: function () { pk[k] = i; place(k); sync(); } });
+        b.style.height = ROW + "px"; b.style.lineHeight = ROW + "px"; items.push(b); inner.appendChild(b);
+      })(i);
+      el.appendChild(inner);
+      cols[k] = { el: el, items: items };
+      el.addEventListener("scroll", function () {
+        if (!pk) return;
+        var i = Math.max(0, Math.min(n - 1, Math.round(el.scrollTop / ROW)));
+        if (pk[k] !== i) { pk[k] = i; sync(); }
+      });
+      el.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); pk[k] = (pk[k] + (e.key === "ArrowUp" ? -1 : 1) + n) % n; place(k); sync(); }
+        else if (e.key === "Enter") { e.preventDefault(); done(); }
+      });
+      return el;
+    }
+    /* 직접 입력: 숫자만 받아 자동으로 “시:분” 모양으로 맞춘다. 930 → 9:30, 0930 → 09:30 */
+    ti.addEventListener("focus", function () { setTimeout(function () { try { ti.select(); } catch (x) {} }, 0); });
+    ti.addEventListener("input", function () {
+      var d = ti.value.replace(/\D/g, "").slice(0, 4);
+      ti.value = d.length > 2 ? d.slice(0, d.length - 2) + ":" + d.slice(-2) : d;
+      if (!d) return;
+      if (d.length <= 2) pk.hh = Math.min(23, +d);
+      else { pk.hh = Math.min(23, +d.slice(0, d.length - 2)); pk.mi = Math.min(59, +d.slice(-2)); }
+      placeAll(); sync(true);
+    });
+    ti.addEventListener("blur", function () { if (pk) sync(); });
+    ti.addEventListener("keydown", function (e) {
+      if (e.isComposing) return;
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); move(e.key === "ArrowUp" ? 1 : -1); }
+      else if (e.key === "Enter") { e.preventDefault(); done(); }
+    });
+    c.appendChild(h("div", { class: "pk-t", text: "시간 선택" }));
+    var box = h("div", { class: "pk-time2" });
+    box.appendChild(ti);
+    box.appendChild(ap);
+    box.appendChild(h("div", { class: "pk-wl", "aria-hidden": "true" }, [h("span", { text: "시" }), h("span", { text: "" }), h("span", { text: "분" })]));
+    var wheels = h("div", { class: "pk-wheels" }, [h("div", { class: "pk-band", "aria-hidden": "true" }), mkCol("hh", 24, "시"), h("div", { class: "pk-colon2", "aria-hidden": "true", text: ":" }), mkCol("mi", 60, "분")]), wacc = 0;
+    /* 마우스 휠: 칸 어디에서든(선택된 숫자 위, 가운데 띠 위 포함) 휠 한 칸에 숫자 하나씩. 왼쪽 절반은 시, 오른쪽 절반은 분. */
+    wheels.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY, r = wheels.getBoundingClientRect(), k = e.clientX < r.left + r.width / 2 ? "hh" : "mi", n = k === "hh" ? 24 : 60, s = 0;
+      if (Math.abs(dy) >= 50) { s = dy > 0 ? 1 : -1; wacc = 0; } else { wacc += dy; if (Math.abs(wacc) >= 30) { s = wacc > 0 ? 1 : -1; wacc = 0; } }
+      if (!s || !pk) return;
+      pk[k] = Math.max(0, Math.min(n - 1, pk[k] + s)); place(k); sync();
+    }, { passive: false });
+    box.appendChild(wheels);
+    c.appendChild(box);
+    ok = pkBtn("btn primary", "선택", done);
+    c.appendChild(h("div", { class: "pk-f" }, [
+      pk.required ? null : pkBtn("btn", pk.clearLabel || "시간 없음", function () { setPickValue(""); }),
+      pk.allow24 ? pkBtn("btn", "24:00", function () { setPickValue("24:00"); }) : null,
+      h("span", { class: "sp" }), pkBtn("btn", "취소", closePick), ok
+    ]));
+    sync();
+    /* 창이 화면에 보인 뒤에 굴림 위치를 맞춘다(숨겨진 상태에서는 위치가 적용되지 않는다). */
+    setTimeout(placeAll, 0); setTimeout(placeAll, 80);
+  }
+
   function openJump() { pk = { sub: "ym", mode: "jump", target: "", clear: false, min: "", y: ui.cy, m: ui.cm }; renderPick(); $("pickModal").hidden = false; }
   $("calTitle").addEventListener("click", openJump);
   $("calTitle").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openJump(); } });
@@ -2586,7 +2655,7 @@
     opts = opts || {};
     var cur = $(target).value;
     pk = { sub: "", mode: mode, target: target, clear: !!opts.clear, min: opts.min || "", step: opts.step || 5, required: !!opts.required, allow24: !!opts.allow24, clearLabel: opts.clearLabel || "", onSet: opts.onSet || null };
-    if (mode === "time") { var a = (cur || "09:00").split(":"); pk.hh = Math.min(23, Number(a[0])); pk.mi = Math.round(Number(a[1]) / pk.step) * pk.step % 60; }
+    if (mode === "time") { var a = (cur || "09:00").split(":"); pk.hh = Math.min(23, Number(a[0])); pk.hh = Math.max(0, Math.min(23, Number(a[0]) || 0)); pk.mi = Math.max(0, Math.min(59, Number(a[1]) || 0)); }
     else {
       var base = cur ? (mode === "month" ? new Date(Number(cur.slice(0, 4)), Number(cur.slice(5, 7)) - 1, 1) : parseDs(cur))
         : (opts.min ? parseDs(opts.min) : new Date());
