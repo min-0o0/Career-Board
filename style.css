@@ -1111,3 +1111,17 @@ input.pk-in:focus { outline: 0; border-color: var(--accent); background: var(--s
   .livebar { top: auto; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); right: 8px; }
   .lv-sn { max-width: 130px; }
 }
+
+/* ===== 수정 창 크기 · 계획 화면 열 비율 ===== */
+#evForm.sheet, #addForm.sheet { max-width: 800px; padding: 28px 34px; gap: 18px 20px; }
+#evForm .sh h3, #addForm .sh h3 { font-size: 22px; }
+#evForm .field input, #addForm .field input { min-height: 48px; font-size: 15px; }
+#evNote, #fProblem { min-height: 150px; font-size: 15px; line-height: 1.65; padding: 12px 14px; }
+#fFix { min-height: 260px; font-size: 15px; line-height: 1.65; padding: 12px 14px; }
+.detail .mdw textarea { min-height: 150px; font-size: 14.5px; line-height: 1.6; }
+@media (max-width: 899px) {
+  #evForm.sheet, #addForm.sheet { min-height: 82vh; min-height: 82dvh; max-height: 96vh; max-height: 96dvh; align-content: start; padding: 20px 16px max(24px, env(safe-area-inset-bottom, 0px)); }
+  #evNote, #fProblem { min-height: 130px; }
+  #fFix { min-height: 200px; }
+}
+@media (min-width: 900px) { .tp-two { gap: 24px; } .tp-two .r { width: clamp(340px, 34%, 560px); } }
