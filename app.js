@@ -1929,7 +1929,7 @@
     var f3 = h("div", { class: "field" }, [h("label", { for: "tpNProb", text: "작업 내용" })]);
     var pi = h("input", { id: "tpNProb", type: "text", maxlength: "200", placeholder: "해야 할 일", autocomplete: "off" }); pi.value = l.problem;
     pi.addEventListener("input", function () { l.problem = pi.value; l.msg = ""; });
-    pi.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); tpNewTodoSave(); } });
+    pi.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); if (e.isComposing || e.keyCode === 229) return; tpNewTodoSave(); } });
     f3.appendChild(pi); box.appendChild(f3);
     s.appendChild(box);
     s.appendChild(h("div", { class: "full vsub tpa-note", text: tab ? "위에서 고른 ‘" + tabLabel(tab) + "’ 탭의 할 일 목록에 함께 추가돼요." : "추가할 문서 탭이 없어요." }));
@@ -1973,13 +1973,14 @@
     obs.observe(document.body, { childList: true, subtree: true });
   }
   function tpNewTodoSave() {
-    var l = tpL; if (!l) return; var p = tpPlan(l.planId); if (!p) { tpCloseLink(); return; }
+    var l = tpL; if (!l || l.busy) return; var p = tpPlan(l.planId); if (!p) { tpCloseLink(); return; }
     var tab = tpNewTab(), area = String(l.area || "").trim(), problem = String(l.problem || "").trim();
     if (!tab) { l.msg = "추가할 문서 탭이 없어요."; tpRenderLink(); return; }
     if (!area) { l.msg = "구분을 입력해 주세요."; tpRenderLink(); return; }
     if (!problem) { l.msg = "작업 내용을 입력해 주세요."; tpRenderLink(); return; }
     if (tpSecretCheck(area) || tpSecretCheck(problem)) { l.msg = SECRET_MSG; tpRenderLink(); return; }
     var maxOrder = items.filter(function (i) { return i.tab === tab; }).reduce(function (m, i) { return Math.max(m, i.order || 0); }, 0), newId = "";
+    l.busy = true;
     write(function () {
       return db.collection("todos").add({ tab: tab, area: area, problem: problem, fix: "", priority: l.prio, done: false, dropped: false, note: "", order: maxOrder + 1, createdAt: Date.now() })
         .then(function (r) {
@@ -1988,6 +1989,7 @@
           return db.collection("plans").doc(p.id).update({ todoIds: ids, tabs: tpTabsOf(ids).concat(tpTabsOf(ids).indexOf(tab) < 0 ? [tab] : []), updatedAt: Date.now() });
         });
     }, "새 할 일을 만들어 연결했어요.").then(function (ok) {
+      l.busy = false;
       if (!ok) { l.msg = "저장하지 못했어요. 잠시 후 다시 시도해 주세요."; tpRenderLink(); return; }
       tpCloseLink(); renderPlanView();
     });
