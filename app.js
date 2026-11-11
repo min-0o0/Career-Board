@@ -1139,6 +1139,10 @@
       var hr = h("div", { class: "tp-hr", style: "top:" + (m - T0) / 60 * H + "px" }, [h("span", { text: m === T1 ? "24:00" : minToHm(m) })]);
       grid.appendChild(hr);
     }
+    /* 집중 기록이 있는 계획을 집중 시작 순서로 세어 8가지 색을 돌려 쓴다(같은 계획은 이어진 조각·다음 날에도 같은 색) */
+    var sessIdx = {};
+    plans.filter(function (q) { return !!q.focus; }).sort(function (a, b) { return a.focus.startedAt - b.focus.startedAt || (a.id < b.id ? -1 : 1); })
+      .forEach(function (q, n) { sessIdx[q.id] = n % 8; });
     var items = pieces.filter(function (d) { return d.endMin > T0; }).map(function (d) { return { d: d, startMin: d.startMin, endMin: d.endMin }; })
       .sort(function (a, b) { return a.startMin - b.startMin || a.endMin - b.endMin; });
     tpLanes(items).forEach(function (i) {
@@ -1152,6 +1156,8 @@
       cls += ps === "done" ? " done" : ps === "partial" ? " partial" : ps === "fail" ? " fail" : (ps === "wait" ? "" : " doing");
       if (d.cont) cls += " cont"; if (d.more) cls += " more"; if (P.eventId) cls += " evp";
       if (selId === P.id) cls += " sel";
+      var sc = P.focus && sessIdx[P.id] != null ? "var(--s" + sessIdx[P.id] + ")" : "";
+      if (sc) { cls += " hasf"; st += "--sc:" + sc + ";--sb:var(--b" + sessIdx[P.id] + ");"; }
       var ev = P.eventId ? events.filter(function (x) { return x.id === P.eventId; })[0] : null, evTxt = "";
       if (ev) { var dd = tpEvDday(ev); evTxt = " · " + kindInfo(kindOf(ev)).label + (dd ? " · " + dd : ""); }
       var icon = ps === "done" ? tpSi("done", '<path d="M4.5 10.5l3.6 3.6 7.4-8.2"/>') : ps === "partial" ? tpSi("part", '<path d="M10 4.2l6 11H4z"/>') : ps === "fail" ? tpSi("fail", '<path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/>') : null;
@@ -1170,13 +1176,9 @@
         var off = d.cont ? DAY_MIN : 0;
         var ax = "calc(" + LW + "px + " + ((i.lane + 1) / i.lanes) + " * (100% - " + LW + "px) - 20px)";
         var segs = focusSegments(P, now).map(function (g) { return { from: Math.max(g.from - off, T0), to: Math.min(g.to - off, T1), over: g.over }; }).filter(function (g) { return g.to > g.from; });
-        if (P.focus.pauses.length && segs.length) {
-          var a = segs[0].from, b = segs[segs.length - 1].to;
-          grid.appendChild(h("i", { class: "tp-act span", style: "top:" + (a - T0) / 60 * H + "px;height:" + Math.max(4, (b - a) / 60 * H) + "px;left:" + ax, title: "쉰 시간 포함" }));
-        }
         segs.forEach(function (g) {
-          grid.appendChild(h("i", { class: "tp-act" + (g.over ? " over" : ""), style: "top:" + (g.from - T0) / 60 * H + "px;height:" + Math.max(4, (g.to - g.from) / 60 * H) + "px;left:" + ax,
-            title: "집중 " + minToHm(g.from) + "–" + (isLive(P) && g === segs[segs.length - 1] ? "측정 중" : minToHm(g.to)) }));
+          grid.appendChild(h("i", { class: "tp-act" + (g.over ? " over" : ""), style: "top:" + (g.from - T0) / 60 * H + "px;height:" + Math.max(4, (g.to - g.from) / 60 * H) + "px;left:" + ax + ";--sc:" + sc,
+            title: P.title + " · 집중 " + minToHm(g.from) + "–" + (isLive(P) && g === segs[segs.length - 1] ? "측정 중" : minToHm(g.to)) }));
         });
       }
     });

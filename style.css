@@ -675,12 +675,16 @@ button.tp-b { font: inherit; font-size: 12.5px; }
 .tp-b.short b { flex: 1; min-width: 0; }
 .tp-b.short .tm { display: none; }
 .tp-b.nar { padding: 3px 24px 3px 6px; }
-.tp-act { position: absolute; width: 10px; border-radius: 999px; background: var(--accent); z-index: 2; box-shadow: 0 0 0 1.5px var(--surface); }
-.tp-act.over { background: var(--accent-ink); }
-.tp-act.span { z-index: 1; width: 0; background: none; border-left: 2px dotted var(--accent); border-radius: 0; opacity: .55; margin-left: 4px; box-shadow: none; }
-.tp-act.span::before, .tp-act.span::after { content: ""; position: absolute; left: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-.tp-act.span::before { top: -2px; }
-.tp-act.span::after { bottom: -2px; }
+.tp-act { position: absolute; width: 10px; border-radius: 8px; background: var(--sc, var(--accent)); z-index: 2; box-shadow: 0 0 0 1.5px var(--surface); }
+/* 세션(집중 기록)마다 다른 색: 계획 칸 배경(--b0~7, 파스텔)과 집중 막대(--s0~7)가 같은 색 쌍을 쓴다. 계획 시간을 넘긴 구간도 같은 색으로 표시한다. */
+:root { --s0: #D9A0A0; --s1: #8FBF9C; --s2: #8DB4D8; --s3: #DDB08A; --s4: #D8C477; --s5: #B3A0D3; --s6: #D79BBB; --s7: #9AA6B8; --b0: #FBE3E3; --b1: #E2F3DF; --b2: #DCEBF8; --b3: #FCE6D4; --b4: #FFF6CC; --b5: #EBE2F6; --b6: #F9DDEB; --b7: #E1E6EE; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s0: #B98F8F; --s1: #86AE90; --s2: #82A3C4; --s3: #C09877; --s4: #B8A867; --s5: #9F90C0; --s6: #BE90AA; --s7: #8E9AAE; --b0: color-mix(in srgb, var(--s0) 36%, var(--surface)); --b1: color-mix(in srgb, var(--s1) 36%, var(--surface)); --b2: color-mix(in srgb, var(--s2) 36%, var(--surface)); --b3: color-mix(in srgb, var(--s3) 36%, var(--surface)); --b4: color-mix(in srgb, var(--s4) 36%, var(--surface)); --b5: color-mix(in srgb, var(--s5) 36%, var(--surface)); --b6: color-mix(in srgb, var(--s6) 36%, var(--surface)); --b7: color-mix(in srgb, var(--s7) 36%, var(--surface)); } }
+:root[data-theme="dark"] { --s0: #B98F8F; --s1: #86AE90; --s2: #82A3C4; --s3: #C09877; --s4: #B8A867; --s5: #9F90C0; --s6: #BE90AA; --s7: #8E9AAE; --b0: color-mix(in srgb, var(--s0) 36%, var(--surface)); --b1: color-mix(in srgb, var(--s1) 36%, var(--surface)); --b2: color-mix(in srgb, var(--s2) 36%, var(--surface)); --b3: color-mix(in srgb, var(--s3) 36%, var(--surface)); --b4: color-mix(in srgb, var(--s4) 36%, var(--surface)); --b5: color-mix(in srgb, var(--s5) 36%, var(--surface)); --b6: color-mix(in srgb, var(--s6) 36%, var(--surface)); --b7: color-mix(in srgb, var(--s7) 36%, var(--surface)); }
+.tp-b.hasf, .tp-b.hasf.done, .tp-b.hasf.partial { background: var(--sb); color: var(--fg); }
+.tp-b.hasf:not(.sel) { border-color: color-mix(in srgb, var(--sc) 45%, var(--sb)); }
+.tp-b.hasf .tm { opacity: .8; }
+button.tp-b.hasf.sel, button.tp-b.hasf.sel.partial, button.tp-b.hasf.sel.fail, button.tp-b.hasf.evp.sel { border-color: color-mix(in srgb, var(--sc) 85%, var(--fg)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--sc) 50%, transparent); }
+.tp-gridwrap .gh i.sess { background: linear-gradient(90deg, var(--s0) 0 25%, var(--s1) 25% 50%, var(--s2) 50% 75%, var(--s3) 75%); }
 .tp-nowline { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid var(--high); z-index: 4; pointer-events: none; }
 .tp-nowline i { position: absolute; left: 30px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--high); }
 .tp-nowline span { position: absolute; right: 0; top: -11px; font-family: var(--font-num); font-size: 11px; font-weight: 700; background: var(--high); color: var(--surface); border-radius: 999px; padding: 0 7px; font-variant-numeric: tabular-nums; }
