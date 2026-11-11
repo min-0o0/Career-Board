@@ -1890,7 +1890,7 @@
     s.appendChild(h("div", { class: "full" }, [chips]));
     if (l.mode === "new") { tpRenderNewTodo(s, p); return; }
     var visKeys = vis.map(function (t) { return t.key; });
-    var cand = linkableTodos().filter(function (t) { return visKeys.indexOf(t.tab) >= 0; });
+    var cand = linkableTodos().filter(function (t) { return visKeys.indexOf(t.tab) >= 0 && !mine[t.id]; });
     var linked = linkedTodosOf(p);
     var rows = linked.concat(cand).filter(function (t) { return l.cat === "all" || t.tab === l.cat; });
     rows.sort(function (a, b) { return (mine[b.id] ? 1 : 0) - (mine[a.id] ? 1 : 0) || a.priority - b.priority || visKeys.indexOf(a.tab) - visKeys.indexOf(b.tab); });
