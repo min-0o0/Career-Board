@@ -38,7 +38,7 @@
   function tabKeyOk(k) { return TABS.some(function (t) { return t.key === k; }); }
   function tabLabel(k) { var f = TABS.filter(function (t) { return t.key === k; })[0]; return f ? f.label : ""; }
   var items = [], events = [];
-  var ui = { view: "calendar", tab: "resume", status: "all", prio: 0, q: "", open: {}, confirm: null, drop: null, dropReason: "", dropOpen: false, adding: false, editId: null };
+  var ui = { view: "calendar", tab: "resume", status: "open", prio: 0, q: "", open: {}, confirm: null, drop: null, dropReason: "", dropOpen: false, adding: false, editId: null };
   var db = null, ready = false, loadError = "", started = false;
   var pendingRender = false;
 
