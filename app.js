@@ -443,11 +443,13 @@
 
   /* 겹침: 그날 계획(전날에서 이어진 조각 포함)끼리 시간이 겹치는 쌍을 찾습니다. 저장하지 않고 화면에서 계산합니다. */
   /* 시간이 있는 일정의 원래 시간대(길이 EV_DEFAULT_MIN분). 겹침 계산에 계획과 함께 넣는다.
-     그 일정에서 만든 계획이 같은 시간대 그대로면 계획이 대신하므로 뺀다. 계획은 자기 원본 일정과는 겹침으로 세지 않는다(own). */
+     그 일정에서 만든 계획이 같은 시간대 그대로면 계획이 대신하므로 뺀다. 계획은 자기 원본 일정과는 겹침으로 세지 않는다(own).
+     타임테이블에서 뺀 일정(excluded)은 아예 넣지 않는다. 그 시간에 다른 계획을 담아도 겹침으로 보지 않는다. */
   function evSlots(key) {
     var out = [];
     events.forEach(function (e) {
       if (e.date !== key || !tpEvTimed(e)) return;
+      if (exPlans.some(function (p) { return p.eventId === e.id && p.date === key; })) return;   /* 타임테이블에서 뺀(제외한) 일정은 겹침·충돌 계산에 넣지 않는다 */
       var s = hmToMin(e.time), en = s + EV_DEFAULT_MIN;
       var own = plans.filter(function (p) { return p.eventId === e.id && p.date === key; })[0] || null;
       if (own && own.startMin === s && own.endMin === en) return;
